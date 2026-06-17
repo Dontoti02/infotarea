@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Seguimiento Académico - InfoTarea</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#3e4947",
+                      "surface-dim": "#ccdbf3",
+                      "on-error": "#ffffff",
+                      "on-background": "#0d1c2e",
+                      "surface-container": "#e6eeff",
+                      "tertiary-fixed-dim": "#4ae176",
+                      "surface-container-highest": "#d5e3fc",
+                      "outline-variant": "#bdc9c6",
+                      "surface-variant": "#d5e3fc",
+                      "surface-bright": "#f8f9ff",
+                      "tertiary-container": "#007a35",
+                      "on-tertiary-fixed": "#002109",
+                      "error-container": "#ffdad6",
+                      "outline": "#6e7977",
+                      "inverse-primary": "#80d5cb",
+                      "tertiary": "#005e27",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-tertiary-container": "#a1ffaf",
+                      "error": "#ba1a1a",
+                      "background": "#f8f9ff",
+                      "surface-container-high": "#dce9ff",
+                      "secondary-container": "#7cf994",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#80d5cb",
+                      "on-secondary-fixed-variant": "#005320",
+                      "surface-container-low": "#eff4ff",
+                      "primary-fixed": "#9cf2e8",
+                      "secondary": "#006e2d",
+                      "surface": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#0d1c2e",
+                      "on-primary-fixed-variant": "#00504a",
+                      "secondary-fixed": "#7ffc97",
+                      "on-tertiary-fixed-variant": "#005321",
+                      "on-primary-container": "#a3faef",
+                      "on-primary-fixed": "#00201d",
+                      "primary-container": "#0f766e",
+                      "secondary-fixed-dim": "#62df7d",
+                      "primary": "#005c55",
+                      "on-secondary-fixed": "#002109",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#233144",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#6bff8f",
+                      "surface-tint": "#006a63",
+                      "on-secondary-container": "#007230"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sidebar-width": "280px",
+                      "base": "4px",
+                      "md": "16px",
+                      "xl": "32px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "title-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "title-lg": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "label-sm": ["11px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9ff; } /* bg-background equivalent */
+        .ambient-shadow { box-shadow: 0px 1px 3px rgba(15, 23, 42, 0.05); }
+        .hover-shadow:hover { box-shadow: 0px 10px 15px -3px rgba(15, 23, 42, 0.08); }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface fixed left-0 top-0 h-full w-sidebar-width border-r border-outline-variant dark:border-outline shadow-sm flex flex-col h-full py-xl z-50">
+<div class="px-xl mb-xl flex items-center gap-md">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined font-headline-md text-headline-md">school</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed-dim">InfoTarea</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Academic Management</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-sm flex flex-col gap-xs">
+<!-- Tabs -->
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-label-md text-label-md">Avisos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-label-md text-label-md">Cursos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-label-md text-label-md">Contenido</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-md text-label-md">Tareas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="font-label-md text-label-md">Entregas</span>
+</a>
+<!-- ACTIVE TAB: Seguimiento -->
+<a class="flex items-center gap-md bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed border-l-4 border-primary px-md py-sm rounded-r-full my-xs" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label-md text-label-md font-bold">Seguimiento</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Usuarios</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-label-md text-label-md">Roles</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-label-md text-label-md">Notificaciones</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors rounded-xl mx-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Configuración</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-sidebar-width flex flex-col h-full bg-background">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline docked full-width top-0 sticky z-40 flex justify-between items-center h-16 px-xl">
+<div class="flex items-center">
+<!-- Search could go here if needed based on JSON, skipping for cleaner tracking view -->
+<span class="font-title-lg text-title-lg font-semibold text-on-surface dark:text-surface-bright">Panel de Estudiante</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant dark:text-surface-dim hover:bg-surface-container dark:hover:bg-on-surface-variant rounded-full p-2 transition-all duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant dark:text-surface-dim hover:bg-surface-container dark:hover:bg-on-surface-variant rounded-full p-2 transition-all duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-xl">
+<div class="max-w-container-max mx-auto flex flex-col gap-lg">
+<!-- Student Profile Header Card -->
+<div class="bg-surface rounded-xl ambient-shadow p-lg flex flex-col md:flex-row items-center md:items-start gap-lg relative overflow-hidden">
+<!-- Decorative background element -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
+<img alt="Ana García" class="w-24 h-24 rounded-full object-cover border-4 border-surface shadow-sm z-10" data-alt="A professional, bright portrait photograph of a young female student with brown hair smiling warmly. She is wearing a casual yet neat light blue sweater. The background is slightly blurred but suggests a modern, well-lit educational campus setting with soft natural light. The overall mood is positive, approachable, and academic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGk0mvI_XLWfJNDJ4EoHNunvQcIcbt0ZsF4JUB5atZlGefCNpssQGhTuCIzF6Wz_A_SpzAGbIIjsFibc86vWTnB9sABJi0imhvxKN__AM8tGNMlGPrjktB4YCnWKZqcJ5ran5Gc8QWU3cjXgS8qo_ybhRPfwzJHCh6xKK7TmY_hqwjvK43T29e4iGHKYOrDmTDPrONJRqNcMOA0oko4LTFwvk2CYOJNVkaQgEEvePVMasyFJ8sVTGE6mJBcXMGcPmwPt7iQVxLVb04"/>
+<div class="flex-1 z-10 text-center md:text-left">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Ana García</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">3º Año - Educación Secundaria Obligatoria (ESO)</p>
+<div class="flex flex-wrap items-center justify-center md:justify-start gap-md mt-md">
+<span class="inline-flex items-center gap-xs px-sm py-xs bg-surface-container-low text-primary-container rounded-lg font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">mail</span>
+                                ana.garcia@infotarea.edu
+                            </span>
+<span class="inline-flex items-center gap-xs px-sm py-xs bg-surface-container-low text-primary-container rounded-lg font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                                Ingreso: Sep 2021
+                            </span>
+</div>
+</div>
+<div class="z-10 flex flex-col gap-sm w-full md:w-auto">
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-lg py-sm rounded-lg transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+                            Enviar Mensaje
+                        </button>
+<button class="border border-outline hover:bg-surface-container-low text-on-surface font-label-md text-label-md px-lg py-sm rounded-lg transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Descargar Informe
+                        </button>
+</div>
+</div>
+<!-- KPI Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Card 1 -->
+<div class="bg-surface rounded-xl ambient-shadow p-lg flex flex-col hover-shadow transition-shadow">
+<div class="flex items-center gap-sm text-secondary-container mb-sm">
+<div class="p-sm bg-secondary-container/20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[24px]">assignment_turned_in</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Tareas Entregadas</span>
+</div>
+<div class="mt-auto">
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-on-surface">142</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/ 150</span>
+</div>
+<div class="mt-sm flex items-center gap-xs text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+5 esta semana</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface rounded-xl ambient-shadow p-lg flex flex-col hover-shadow transition-shadow">
+<div class="flex items-center gap-sm text-primary mb-sm">
+<div class="p-sm bg-primary/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[24px]">school</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Promedio General</span>
+</div>
+<div class="mt-auto">
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-on-surface">8.9</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/ 10</span>
+</div>
+<div class="mt-sm flex items-center gap-xs text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">star</span>
+<span>Percentil superior 15%</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface rounded-xl ambient-shadow p-lg flex flex-col hover-shadow transition-shadow">
+<div class="flex items-center gap-sm text-tertiary mb-sm">
+<div class="p-sm bg-tertiary/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-[24px]">event_available</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">Asistencia</span>
+</div>
+<div class="mt-auto">
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-on-surface">96%</span>
+</div>
+<div class="mt-sm flex items-center gap-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">info</span>
+<span>3 ausencias justificadas</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Visualization Area -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Donut Chart Card (Cumplimiento) -->
+<div class="bg-surface rounded-xl ambient-shadow p-lg flex flex-col items-center justify-center col-span-1 min-h-[320px]">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-lg self-start w-full text-center">Cumplimiento General</h3>
+<!-- Simple CSS Donut representation -->
+<div class="relative w-48 h-48">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<!-- Background Circle -->
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+<!-- Progress Circle (approx 94%) -->
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="94, 100" stroke-linecap="round" stroke-width="4"></path>
+</svg>
+<!-- Inner Text -->
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-display-lg text-primary">94%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Global</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-lg text-center max-w-[200px]">
+                            Excelente ritmo de trabajo. Continúa manteniendo este nivel de compromiso.
+                        </p>
+</div>
+<!-- Progress Bars (Materias) -->
+<div class="bg-surface rounded-xl ambient-shadow p-lg col-span-1 lg:col-span-2 flex flex-col">
+<div class="flex justify-between items-center mb-lg">
+<h3 class="font-title-lg text-title-lg text-on-surface">Rendimiento por Materia</h3>
+<button class="text-primary hover:bg-primary/10 rounded-lg px-sm py-xs font-label-md text-label-md transition-colors">
+                                Ver todo
+                            </button>
+</div>
+<div class="flex flex-col gap-md flex-1 justify-center">
+<!-- Subject 1 -->
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Física y Química</span>
+<span class="font-label-md text-label-md text-secondary">92%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+<div class="bg-secondary h-2 rounded-full" style="width: 92%"></div>
+</div>
+</div>
+<!-- Subject 2 -->
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Matemáticas Avanzadas</span>
+<span class="font-label-md text-label-md text-primary">85%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-2 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<!-- Subject 3 -->
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Literatura</span>
+<span class="font-label-md text-label-md text-tertiary">88%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+<div class="bg-tertiary h-2 rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<!-- Subject 4 -->
+<div>
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-on-surface">Historia</span>
+<span class="font-label-md text-label-md text-on-surface-variant">78%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+<div class="bg-outline h-2 rounded-full" style="width: 78%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Grades List -->
+<div class="bg-surface rounded-xl ambient-shadow overflow-hidden">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-title-lg text-title-lg text-on-surface">Últimas Calificaciones</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Actividad</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Materia</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold">Fecha</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold text-right">Nota</th>
+<th class="p-md font-label-md text-label-md text-on-surface-variant font-semibold text-center">Estado</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-md font-medium">Examen Parcial - Álgebra</td>
+<td class="p-md text-on-surface-variant">Matemáticas</td>
+<td class="p-md text-on-surface-variant">12 Oct 2023</td>
+<td class="p-md text-right font-bold text-on-surface">8.5</td>
+<td class="p-md text-center">
+<span class="inline-block px-sm py-xs bg-secondary-container/30 text-secondary-container font-label-sm text-label-sm rounded-full">Revisado</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-md font-medium">Ensayo: Revolución Industrial</td>
+<td class="p-md text-on-surface-variant">Historia</td>
+<td class="p-md text-on-surface-variant">08 Oct 2023</td>
+<td class="p-md text-right font-bold text-on-surface">9.0</td>
+<td class="p-md text-center">
+<span class="inline-block px-sm py-xs bg-secondary-container/30 text-secondary-container font-label-sm text-label-sm rounded-full">Revisado</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="p-md font-medium">Práctica de Laboratorio 3</td>
+<td class="p-md text-on-surface-variant">Física</td>
+<td class="p-md text-on-surface-variant">05 Oct 2023</td>
+<td class="p-md text-right font-bold text-on-surface">-</td>
+<td class="p-md text-center">
+<span class="inline-block px-sm py-xs bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm rounded-full">Entregado</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-md font-medium">Cuestionario Semanal</td>
+<td class="p-md text-on-surface-variant">Inglés</td>
+<td class="p-md text-on-surface-variant">01 Oct 2023</td>
+<td class="p-md text-right font-bold text-on-surface">10.0</td>
+<td class="p-md text-center">
+<span class="inline-block px-sm py-xs bg-secondary-container/30 text-secondary-container font-label-sm text-label-sm rounded-full">Revisado</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

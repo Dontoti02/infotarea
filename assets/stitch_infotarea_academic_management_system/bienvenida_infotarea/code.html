@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>InfoTarea - Bienvenido</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#3e4947",
+                      "surface-dim": "#ccdbf3",
+                      "on-error": "#ffffff",
+                      "on-background": "#0d1c2e",
+                      "surface-container": "#e6eeff",
+                      "tertiary-fixed-dim": "#4ae176",
+                      "surface-container-highest": "#d5e3fc",
+                      "outline-variant": "#bdc9c6",
+                      "surface-variant": "#d5e3fc",
+                      "surface-bright": "#f8f9ff",
+                      "tertiary-container": "#007a35",
+                      "on-tertiary-fixed": "#002109",
+                      "error-container": "#ffdad6",
+                      "outline": "#6e7977",
+                      "inverse-primary": "#80d5cb",
+                      "tertiary": "#005e27",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-tertiary-container": "#a1ffaf",
+                      "error": "#ba1a1a",
+                      "background": "#f8f9ff",
+                      "surface-container-high": "#dce9ff",
+                      "secondary-container": "#7cf994",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#80d5cb",
+                      "on-secondary-fixed-variant": "#005320",
+                      "surface-container-low": "#eff4ff",
+                      "primary-fixed": "#9cf2e8",
+                      "secondary": "#006e2d",
+                      "surface": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#0d1c2e",
+                      "on-primary-fixed-variant": "#00504a",
+                      "secondary-fixed": "#7ffc97",
+                      "on-tertiary-fixed-variant": "#005321",
+                      "on-primary-container": "#a3faef",
+                      "on-primary-fixed": "#00201d",
+                      "primary-container": "#0f766e",
+                      "secondary-fixed-dim": "#62df7d",
+                      "primary": "#005c55",
+                      "on-secondary-fixed": "#002109",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#233144",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#6bff8f",
+                      "surface-tint": "#006a63",
+                      "on-secondary-container": "#007230"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sidebar-width": "280px",
+                      "base": "4px",
+                      "md": "16px",
+                      "xl": "32px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "title-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "title-lg": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "label-sm": ["11px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- Decorative Background Elements -->
+<div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-surface-container-high/40 to-transparent -z-10 rounded-bl-[100px] pointer-events-none"></div>
+<div class="absolute -top-[20%] -left-[10%] w-[500px] h-[500px] rounded-full bg-primary-container/5 blur-[100px] -z-10 pointer-events-none"></div>
+<!-- Minimal Header (Landing Page Context - No App Navigation Shell) -->
+<header class="w-full px-md md:px-xl py-lg flex justify-between items-center z-40 bg-surface/50 backdrop-blur-md sticky top-0">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+</div>
+<span class="font-title-lg text-title-lg font-bold tracking-tight text-primary">InfoTarea</span>
+</div>
+<div>
+<button class="bg-surface-container-lowest text-primary font-label-md text-label-md px-lg py-sm rounded-full border border-outline-variant hover:bg-surface-container-low transition-colors duration-200">
+                Soporte
+            </button>
+</div>
+</header>
+<!-- Main Hero Section -->
+<main class="flex-grow flex items-center justify-center pt-xl pb-32 px-md md:px-xl w-full z-10">
+<div class="max-w-container-max w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-xl items-center">
+<!-- Text Content (Left) -->
+<div class="lg:col-span-5 flex flex-col gap-lg items-start z-10">
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-tertiary-container/10 border border-tertiary-container/20 text-tertiary font-label-sm text-label-sm mb-2">
+<span class="material-symbols-outlined text-[16px]">campaign</span>
+<span>Plataforma Educativa 2.0</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface">
+                    Organiza tareas, avisos y seguimiento académico en un <span class="text-primary">solo lugar</span>.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mt-sm">
+                    La plataforma centralizada para una comunicación escolar eficiente y moderna. Diseñada para instituciones que buscan claridad, ritmo y productividad.
+                </p>
+<div class="flex flex-col sm:flex-row gap-md mt-lg w-full sm:w-auto">
+<button class="bg-primary-container text-on-primary-container font-label-md text-label-md px-xl py-4 rounded-full shadow-[0px_10px_15px_-3px_rgba(15,23,42,0.08)] hover:bg-primary hover:text-on-primary transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+<span>Iniciar Sesión</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<!-- Trust Indicators / Small Stats -->
+<div class="flex items-center gap-xl mt-xl pt-lg border-t border-outline-variant/30 w-full">
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md text-primary font-bold">99%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entrega a tiempo</span>
+</div>
+<div class="flex flex-col border-l border-outline-variant/30 pl-xl">
+<span class="font-headline-md text-headline-md text-primary font-bold">24/7</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Acceso centralizado</span>
+</div>
+</div>
+</div>
+<!-- Illustration / High-End Visuals (Right) -->
+<div class="lg:col-span-7 relative w-full h-full min-h-[500px] mt-xl lg:mt-0 flex items-center justify-center lg:justify-end">
+<!-- Main Glassmorphism Container -->
+<div class="relative w-full max-w-[700px] aspect-[4/3] rounded-[32px] overflow-hidden bg-surface-container-lowest shadow-[0px_20px_40px_-10px_rgba(15,23,42,0.05)] border border-white/50 z-10 group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A bright, high-quality photograph of diverse university students studying together around a modern wooden table. They are looking at a sleek silver laptop, actively discussing an academic project. The environment is a well-lit, contemporary library or institutional space with soft, natural daylight filtering through large windows. The overall aesthetic is clean, modern, and highly productive, with a subtle color palette featuring soft whites, light grays, and muted teal accents that align with a professional educational software brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB35wXBMTHJX-w2sew-ywUL2XIJtiPFfRnCUNyLbozy2bP7hayh6TP3b42qm_EuFbCXTQgoz7AFzD5MlDf2N1Hc_ZelDvETvGW1IsMtCcoFocbuHgyer2B6_cnMncntn8XCOSkbKCDVxfklToj9RUxETxgMhMUW_Ymhh_0CFlTQ7NJDZvBJRaA6LVMb4aQYFc4LaZSBbtKWtb1S-5SMA6IypQWXK5ELSeNu-DwRvq8QXAyrTm0ic7qwORgtMdAkScghy5Uojl-bIXDT"/>
+<!-- Gradient Overlay for contrast -->
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/40 via-transparent to-transparent"></div>
+</div>
+<!-- Floating Bento/UI Elements to emphasize "Platform" feel -->
+<!-- Floating Task Card -->
+<div class="absolute bottom-10 left-0 lg:-left-10 bg-surface-container-lowest p-lg rounded-xl shadow-[0px_10px_20px_-5px_rgba(15,23,42,0.12)] border border-outline-variant/20 z-20 flex items-center gap-md animate-[bounce_4s_infinite] max-w-[280px]">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface mb-1">Proyecto Final</p>
+<p class="font-label-sm text-label-sm text-tertiary">Entregado a tiempo</p>
+</div>
+</div>
+<!-- Floating Notification Card -->
+<div class="absolute top-10 right-0 lg:-right-6 bg-surface-container-lowest p-md rounded-xl shadow-[0px_10px_20px_-5px_rgba(15,23,42,0.12)] border border-outline-variant/20 z-20 flex flex-col gap-sm animate-[bounce_5s_infinite_0.5s] max-w-[240px]">
+<div class="flex items-center gap-sm mb-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">notifications_active</span>
+<p class="font-label-md text-label-md text-on-surface">Nuevo Aviso</p>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm leading-tight">La clase de mañana será en el laboratorio central.</p>
+</div>
+</div>
+</div>
+</main>
+</body></html>

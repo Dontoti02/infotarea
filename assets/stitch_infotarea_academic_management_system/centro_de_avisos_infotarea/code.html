@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>InfoTarea - Avisos Institucionales</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#3e4947",
+                        "surface-dim": "#ccdbf3",
+                        "on-error": "#ffffff",
+                        "on-background": "#0d1c2e",
+                        "surface-container": "#e6eeff",
+                        "tertiary-fixed-dim": "#4ae176",
+                        "surface-container-highest": "#d5e3fc",
+                        "outline-variant": "#bdc9c6",
+                        "surface-variant": "#d5e3fc",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary-container": "#007a35",
+                        "on-tertiary-fixed": "#002109",
+                        "error-container": "#ffdad6",
+                        "outline": "#6e7977",
+                        "inverse-primary": "#80d5cb",
+                        "tertiary": "#005e27",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-container": "#a1ffaf",
+                        "error": "#ba1a1a",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "secondary-container": "#7cf994",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed-dim": "#80d5cb",
+                        "on-secondary-fixed-variant": "#005320",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed": "#9cf2e8",
+                        "secondary": "#006e2d",
+                        "surface": "#f8f9ff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#0d1c2e",
+                        "on-primary-fixed-variant": "#00504a",
+                        "secondary-fixed": "#7ffc97",
+                        "on-tertiary-fixed-variant": "#005321",
+                        "on-primary-container": "#a3faef",
+                        "on-primary-fixed": "#00201d",
+                        "primary-container": "#0f766e",
+                        "secondary-fixed-dim": "#62df7d",
+                        "primary": "#005c55",
+                        "on-secondary-fixed": "#002109",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#233144",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#6bff8f",
+                        "surface-tint": "#006a63",
+                        "on-secondary-container": "#007230"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "sidebar-width": "280px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xl": "32px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "title-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-lg": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.25", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-surface-container-lowest border-r border-outline-variant shadow-sm z-50 flex flex-col py-xl hidden md:flex">
+<div class="px-lg mb-xl">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary">InfoTarea</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Academic Management</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-xs px-sm overflow-y-auto">
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-title-lg text-title-lg text-base">Dashboard</span>
+</a>
+<a class="flex items-center gap-md bg-secondary-container text-on-secondary-container border-l-4 border-primary px-md py-sm rounded-r-full transition-all duration-200 active:scale-95" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-title-lg text-title-lg text-base font-semibold">Avisos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-title-lg text-title-lg text-base">Cursos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-title-lg text-title-lg text-base">Contenido</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-title-lg text-title-lg text-base">Tareas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">assignment_turned_in</span>
+<span class="font-title-lg text-title-lg text-base">Entregas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-title-lg text-title-lg text-base">Seguimiento</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-title-lg text-title-lg text-base">Usuarios</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-title-lg text-title-lg text-base">Roles</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-title-lg text-title-lg text-base">Notificaciones</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-title-lg text-title-lg text-base">Configuración</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-sidebar-width flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 sticky z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center h-16 px-xl">
+<div class="flex items-center gap-md">
+<span class="font-title-lg text-title-lg font-semibold text-on-surface md:hidden">InfoTarea</span>
+<div class="hidden md:flex items-center bg-surface-container-low rounded-full px-md py-sm border border-outline-variant focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-container transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-sm text-[20px]">search</span>
+<input class="bg-transparent border-none focus:outline-none font-body-md text-body-md text-on-surface placeholder-on-surface-variant w-64" placeholder="Buscar avisos..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-md md:p-xl flex-1 max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Avisos Institucionales</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Últimas noticias y comunicados importantes.</p>
+</div>
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-lg py-sm rounded-lg flex items-center gap-sm transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    Crear Aviso
+                </button>
+</div>
+<!-- Bento Grid / Cards Feed -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Card 1: Urgente -->
+<div class="bg-surface-container-lowest rounded-xl p-lg border border-error-container shadow-[0_1px_3px_rgba(15,23,42,0.05)] hover:shadow-[0_10px_15px_-3px_rgba(15,23,42,0.08)] transition-all duration-300 relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-full h-1 bg-error"></div>
+<div class="flex justify-between items-start mb-md">
+<span class="bg-error-container text-on-error-container font-label-sm text-label-sm px-sm py-xs rounded-full border border-error/20 flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">error</span>
+                            Urgente
+                        </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hoy, 08:30 AM</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-sm group-hover:text-primary transition-colors">Cierre temporal de la Biblioteca Central</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-md">Debido a trabajos de mantenimiento eléctrico imprevistos, la Biblioteca Central permanecerá cerrada durante las próximas 48 horas. Recomendamos utilizar las bibliotecas de facultad como alternativa.</p>
+<div class="flex items-center gap-sm pt-sm border-t border-outline-variant">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-label-md">DA</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Dirección Administrativa</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Administrativo</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Académico / Informativo -->
+<div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-[0_1px_3px_rgba(15,23,42,0.05)] hover:shadow-[0_10px_15px_-3px_rgba(15,23,42,0.08)] transition-all duration-300">
+<div class="flex justify-between items-start mb-md">
+<span class="bg-surface-container-high text-on-surface font-label-sm text-label-sm px-sm py-xs rounded-full border border-outline-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">info</span>
+                            Académico
+                        </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ayer, 14:15 PM</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-sm">Apertura de inscripciones para cursos de verano</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-md">Se informa a la comunidad estudiantil que las inscripciones para los cursos intensivos de verano estarán abiertas a partir del próximo lunes a través del portal de autogestión académica.</p>
+<div class="flex items-center gap-sm pt-sm border-t border-outline-variant">
+<div class="w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary font-label-md">SA</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Secretaría Académica</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Informativo</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Evento -->
+<div class="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-[0_1px_3px_rgba(15,23,42,0.05)] hover:shadow-[0_10px_15px_-3px_rgba(15,23,42,0.08)] transition-all duration-300 md:col-span-2 lg:col-span-1">
+<div class="flex justify-between items-start mb-md">
+<span class="bg-secondary-container text-on-secondary-container font-label-sm text-label-sm px-sm py-xs rounded-full border border-secondary/20 flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">event</span>
+                            Evento Institucional
+                        </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">12 Oct, 09:00 AM</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-sm">Feria de Innovación Tecnológica 2024</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Invitamos a todos los estudiantes y docentes a participar en la feria anual donde se presentarán los proyectos más destacados del último semestre. Habrá charlas con expertos de la industria.</p>
+<div class="flex items-center gap-sm pt-sm border-t border-outline-variant">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-label-md">FE</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Facultad de Exactas</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Informativo</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

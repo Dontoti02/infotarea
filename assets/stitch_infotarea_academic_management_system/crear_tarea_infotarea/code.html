@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Crear Nueva Tarea - InfoTarea</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#3e4947",
+                      "surface-dim": "#ccdbf3",
+                      "on-error": "#ffffff",
+                      "on-background": "#0d1c2e",
+                      "surface-container": "#e6eeff",
+                      "tertiary-fixed-dim": "#4ae176",
+                      "surface-container-highest": "#d5e3fc",
+                      "outline-variant": "#bdc9c6",
+                      "surface-variant": "#d5e3fc",
+                      "surface-bright": "#f8f9ff",
+                      "tertiary-container": "#007a35",
+                      "on-tertiary-fixed": "#002109",
+                      "error-container": "#ffdad6",
+                      "outline": "#6e7977",
+                      "inverse-primary": "#80d5cb",
+                      "tertiary": "#005e27",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-tertiary-container": "#a1ffaf",
+                      "error": "#ba1a1a",
+                      "background": "#f8f9ff",
+                      "surface-container-high": "#dce9ff",
+                      "secondary-container": "#7cf994",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#80d5cb",
+                      "on-secondary-fixed-variant": "#005320",
+                      "surface-container-low": "#eff4ff",
+                      "primary-fixed": "#9cf2e8",
+                      "secondary": "#006e2d",
+                      "surface": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#0d1c2e",
+                      "on-primary-fixed-variant": "#00504a",
+                      "secondary-fixed": "#7ffc97",
+                      "on-tertiary-fixed-variant": "#005321",
+                      "on-primary-container": "#a3faef",
+                      "on-primary-fixed": "#00201d",
+                      "primary-container": "#0f766e",
+                      "secondary-fixed-dim": "#62df7d",
+                      "primary": "#005c55",
+                      "on-secondary-fixed": "#002109",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#233144",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#6bff8f",
+                      "surface-tint": "#006a63",
+                      "on-secondary-container": "#007230"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sidebar-width": "280px",
+                      "base": "4px",
+                      "md": "16px",
+                      "xl": "32px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "title-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "title-lg": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "label-sm": ["11px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface border-r border-outline-variant dark:border-outline shadow-sm fixed left-0 top-0 h-full w-sidebar-width flex flex-col py-xl hidden md:flex z-50">
+<div class="px-xl mb-lg">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">school</span>
+<div>
+<h1 class="font-title-lg text-title-lg font-bold text-on-surface">InfoTarea</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Academic Management</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-sm flex flex-col gap-xs">
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span>Avisos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span>Cursos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Contenido</span>
+</a>
+<a class="flex items-center gap-md bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed border-l-4 border-primary px-md py-sm rounded-r-full transition-all duration-200 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-bold">Tareas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
+<span>Entregas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Seguimiento</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Usuarios</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span>Roles</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span>Notificaciones</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-high dark:hover:bg-on-surface-variant px-md py-sm transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Configuración</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-sidebar-width h-full w-full">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline docked full-width top-0 sticky z-40 flex justify-between items-center h-16 px-xl">
+<div class="flex items-center gap-md">
+<!-- Back button for deep pages, technically task creation is a deep page but we keep the title to show context -->
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h2 class="font-title-lg text-title-lg font-semibold text-on-surface">Crear Nueva Tarea</h2>
+</div>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150 relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150 flex items-center gap-2">
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A close up professional headshot of an academic professor, wearing a neat button down shirt, neutral lighting, modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhxzlNoMAyPKoCbwTbne7BUOWqF2f3hDMN4WvzqVb2GFk-RwljMpUw5QRMRW10WaGiIvGIu0avPgsVuWu1GdLztjaqyjdFNHBggHZtNS-j5iEjYsg9LloWuMklUf7WgEXF2nIZGLwlMF06RBAHu6i4sJdjj59nsocK-pLLrrYpc-vewIhyGAr4Cgws9lQrZS4MyDy3V88ABhDaerjZwRLbkGMt_Ma51guCgKvhJ10AnFyJ8By0JD4hCm4K3PtAjkA9n2kCOgvV_RYV"/>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-md md:p-xl bg-background">
+<div class="max-w-container-max mx-auto h-full flex flex-col lg:flex-row gap-gutter">
+<!-- Left Column: Form Details (Flex grow) -->
+<div class="flex-1 flex flex-col gap-lg">
+<!-- Title & Instructions Card -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-outline-variant flex flex-col gap-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="task-title">Título de la tarea</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" id="task-title" placeholder="Ej: Ensayo sobre la Revolución Industrial" type="text"/>
+</div>
+<div class="flex flex-col flex-1">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="task-instructions">Instrucciones</label>
+<!-- Rich Text Editor Toolbar Mockup -->
+<div class="border border-outline-variant border-b-0 rounded-t-lg bg-surface px-sm py-xs flex gap-xs items-center">
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">format_underlined</span></button>
+<div class="w-px h-4 bg-outline-variant mx-1"></div>
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">format_list_bulleted</span></button>
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">format_list_numbered</span></button>
+<div class="w-px h-4 bg-outline-variant mx-1"></div>
+<button class="p-1 hover:bg-surface-container rounded text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">link</span></button>
+</div>
+<textarea class="w-full bg-surface border border-outline-variant rounded-b-lg px-md py-sm font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y" id="task-instructions" placeholder="Escribe las instrucciones detalladas aquí..." rows="8"></textarea>
+</div>
+</div>
+<!-- Attachments Card -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-outline-variant flex flex-col gap-md">
+<div class="flex justify-between items-center">
+<h3 class="font-title-lg text-title-lg text-on-surface">Materiales de Apoyo</h3>
+</div>
+<!-- Drag and Drop Area -->
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-lg flex flex-col items-center justify-center bg-surface-container-low text-center hover:bg-surface-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[48px] text-on-surface-variant mb-sm group-hover:text-primary transition-colors">cloud_upload</span>
+<p class="font-body-md text-on-surface font-semibold mb-xs">Haz clic o arrastra archivos aquí</p>
+<p class="font-label-md text-label-md text-on-surface-variant">PDF, DOCX, JPG o PNG (Max. 10MB)</p>
+</div>
+<!-- Uploaded Files List Mockup -->
+<div class="flex flex-col gap-xs mt-sm">
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded-lg bg-surface">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-error">picture_as_pdf</span>
+<span class="font-body-md text-body-md text-on-surface">rubrica_evaluacion.pdf</span>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1"><span class="material-symbols-outlined text-[20px]">close</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Settings Sidebar (Fixed width on large screens) -->
+<div class="w-full lg:w-[360px] flex flex-col gap-lg">
+<!-- Configuration Card -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-outline-variant flex flex-col gap-md">
+<h3 class="font-title-lg text-title-lg text-on-surface border-b border-outline-variant pb-sm mb-sm">Configuración</h3>
+<!-- Course Selection -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="course-select">Curso</label>
+<div class="relative">
+<select class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm font-body-md text-on-surface appearance-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" id="course-select">
+<option disabled="" selected="" value="">Selecciona un curso</option>
+<option value="historia">Historia Universal - 10A</option>
+<option value="literatura">Literatura Contemporánea - 11B</option>
+<option value="filosofia">Filosofía - 12A</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<!-- Due Date -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="due-date">Fecha y Hora Límite</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" id="due-date" type="datetime-local"/>
+</div>
+<!-- Points -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs" for="points">Puntaje Máximo</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-md py-sm font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" id="points" min="0" type="number" value="100"/>
+</div>
+<!-- Submission Type -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-xs">Tipo de Entrega</label>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-sm cursor-pointer">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4" type="checkbox"/>
+<span class="font-body-md text-on-surface">Archivo adjunto</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4" type="checkbox"/>
+<span class="font-body-md text-on-surface">Texto en línea</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-outline-variant flex flex-col gap-md sticky top-[88px]">
+<button class="w-full bg-primary hover:bg-surface-tint text-on-primary font-label-md text-label-md py-3 px-6 rounded-full transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">send</span>
+                            Publicar Tarea
+                        </button>
+<button class="w-full bg-transparent border border-outline hover:bg-surface-container-low text-on-surface font-label-md text-label-md py-3 px-6 rounded-full transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                            Guardar Borrador
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

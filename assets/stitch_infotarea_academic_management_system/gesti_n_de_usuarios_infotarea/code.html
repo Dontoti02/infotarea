@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>InfoTarea - Usuarios</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#3e4947",
+                        "surface-dim": "#ccdbf3",
+                        "on-error": "#ffffff",
+                        "on-background": "#0d1c2e",
+                        "surface-container": "#e6eeff",
+                        "tertiary-fixed-dim": "#4ae176",
+                        "surface-container-highest": "#d5e3fc",
+                        "outline-variant": "#bdc9c6",
+                        "surface-variant": "#d5e3fc",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary-container": "#007a35",
+                        "on-tertiary-fixed": "#002109",
+                        "error-container": "#ffdad6",
+                        "outline": "#6e7977",
+                        "inverse-primary": "#80d5cb",
+                        "tertiary": "#005e27",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-container": "#a1ffaf",
+                        "error": "#ba1a1a",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "secondary-container": "#7cf994",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed-dim": "#80d5cb",
+                        "on-secondary-fixed-variant": "#005320",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed": "#9cf2e8",
+                        "secondary": "#006e2d",
+                        "surface": "#f8f9ff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#0d1c2e",
+                        "on-primary-fixed-variant": "#00504a",
+                        "secondary-fixed": "#7ffc97",
+                        "on-tertiary-fixed-variant": "#005321",
+                        "on-primary-container": "#a3faef",
+                        "on-primary-fixed": "#00201d",
+                        "primary-container": "#0f766e",
+                        "secondary-fixed-dim": "#62df7d",
+                        "primary": "#005c55",
+                        "on-secondary-fixed": "#002109",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#233144",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#6bff8f",
+                        "surface-tint": "#006a63",
+                        "on-secondary-container": "#007230"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "sidebar-width": "280px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xl": "32px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "title-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-lg": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.25", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #F8FAFC; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface text-primary dark:text-primary-fixed-dim font-title-lg text-title-lg fixed left-0 top-0 h-full w-sidebar-width border-r border-outline-variant dark:border-outline shadow-sm flex flex-col h-full py-xl z-50">
+<div class="px-md mb-lg">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined font-bold">school</span>
+</div>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed-dim" style="font-size: 24px; line-height: 1.2;">InfoTarea</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Academic Management</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto pr-sm pl-sm flex flex-col gap-xs mt-sm">
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-body-md text-body-md font-medium">Avisos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-body-md text-body-md font-medium">Cursos</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="font-body-md text-body-md font-medium">Contenido</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-body-md text-body-md font-medium">Tareas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span>
+<span class="font-body-md text-body-md font-medium">Entregas</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md font-medium">Seguimiento</span>
+</a>
+<!-- Active Nav Item -->
+<a class="flex items-center gap-md bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed border-l-4 border-primary px-md py-sm rounded-r-full transition-all duration-200 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md font-semibold">Usuarios</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-body-md text-body-md font-medium">Roles</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-body-md text-body-md font-medium">Notificaciones</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant dark:text-surface-dim hover:bg-surface-container-low dark:hover:bg-on-surface-variant px-md py-sm transition-colors transition-all duration-200 active:scale-95 rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md font-medium">Configuración</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col ml-sidebar-width w-full relative">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-on-background text-primary dark:text-primary-fixed-dim font-label-md text-label-md docked full-width top-0 sticky z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center h-16 px-xl">
+<div class="flex-1 flex items-center">
+<h2 class="font-title-lg text-title-lg font-semibold text-on-surface dark:text-surface-bright hidden md:block mr-lg">Usuarios</h2>
+<!-- Search Bar -->
+<div class="relative w-full max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-size: 20px;">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="Buscar alumnos, docentes..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant dark:text-surface-dim hover:bg-surface-container dark:hover:bg-on-surface-variant rounded-full p-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden ml-sm cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A close up portrait of a professional corporate worker in a well lit office environment. Soft natural lighting from a nearby window creates a bright, modern aesthetic. The individual has a friendly and confident expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3GjQwCOS5I8ZHpKjz0knedqWPaxh9jM4AwCQO1K3pS5qZz6nLVC9jzkI0CawBFoiiWUkbpznl27a7DR22lMQfpQQLIFYOLy-zXDuIf570JoaL_a0V5CjhxUbFKZrjX4jsof1r6QZfGq9kHRg30Ys5MatInGFspeHF4lhgredcqXecqoS3F6eG04a0LNkyNfl1Hi4FN6ylEwoMikY_rBAkhcIrzXfLaeycy3STazySFEGI3OSH0S38QODHA3mCO_-VivpgbpCvi0j1"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-xl">
+<div class="max-w-container-max mx-auto">
+<!-- Toolbar Area -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-lg">
+<div class="flex gap-sm">
+<div class="relative">
+<select class="appearance-none bg-surface border border-outline-variant rounded-lg px-4 py-2 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+<option value="">Todos los Roles</option>
+<option value="admin">Administrador</option>
+<option value="docente">Docente</option>
+<option value="estudiante">Estudiante</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 20px;">arrow_drop_down</span>
+</div>
+<div class="relative">
+<select class="appearance-none bg-surface border border-outline-variant rounded-lg px-4 py-2 pr-10 font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+<option value="">Todos los Estados</option>
+<option value="activo">Activo</option>
+<option value="inactivo">Inactivo</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" style="font-size: 20px;">arrow_drop_down</span>
+</div>
+</div>
+<button class="bg-primary-container text-on-primary-container hover:bg-surface-tint hover:text-white font-label-md text-label-md px-lg py-3 rounded-lg flex items-center gap-xs transition-all shadow-sm hover:shadow-md">
+<span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+                        Crear Usuario
+                    </button>
+</div>
+<!-- Advanced Data Table Component -->
+<div class="bg-surface rounded-xl shadow-sm border border-outline-variant overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-variant text-on-surface-variant font-label-md text-label-md border-b border-outline-variant">
+<th class="p-lg py-4 font-semibold w-1/4">Nombre</th>
+<th class="p-lg py-4 font-semibold w-1/4">Correo</th>
+<th class="p-lg py-4 font-semibold w-1/6">Rol</th>
+<th class="p-lg py-4 font-semibold w-1/6">Estado</th>
+<th class="p-lg py-4 font-semibold w-1/6">Curso/Sección</th>
+<th class="p-lg py-4 font-semibold text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Row 1 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="p-lg py-4">
+<div class="flex items-center gap-md">
+<div class="h-10 w-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A portrait of a young female professional in a bright, modern educational setting. She is smiling softly at the camera. The lighting is high-key and flattering, emphasizing a clean and trustworthy aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwxvhoWIW1_OZPgbLA__IhyttENF9xMglDYS19m5W1Byr9L2KkC1LOFvYHrBx0KvdsGLkbdeosKx8ANix9nJwIqalgvNK33rz91mQzR7GlMQtgCDpRlXowvfEznb7qnD4NOxkd4N0lX7wBwRQuANjxkE9y8V5s6GFQ-5K1GAw9dDREjY4JW9AdhupEDG2eretQxHitKWAjKyRc_jRTWzCsTWvW7qj9QSqgb2fyhVgia2iiIFM48SRWn1-LsMvhZJuNRH-DYLxA9_6l"/>
+</div>
+<div>
+<div class="font-semibold">Ana García Rojas</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm mt-1">ID: EST-2023-001</div>
+</div>
+</div>
+</td>
+<td class="p-lg py-4 text-on-surface-variant">ana.garcia@instituto.edu</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface border border-outline-variant">Estudiante</span>
+</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Activo
+                                        </span>
+</td>
+<td class="p-lg py-4 text-on-surface-variant">Matemáticas - 3A</td>
+<td class="p-lg py-4 text-right">
+<div class="flex items-center justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Ver Perfil">
+<span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1" title="Desactivar">
+<span class="material-symbols-outlined" style="font-size: 20px;">person_off</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="p-lg py-4">
+<div class="flex items-center gap-md">
+<div class="h-10 w-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A headshot of a middle-aged male educator with glasses. He has a serious but approachable demeanor. The background is slightly blurred, showing a modern classroom or office environment with soft, ambient lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuoyT1P3wSQCxj1XEAA6CO_ZWS9sw79K5H5PqrUsUtWFAkEHDjd5B6Rmi0EqBJFCHbrJmW2v86ifxXjNM4BOWpUL1sRECy4Tw0NA-UykU89AGgVhLAWEsVocICzXa9L1t4uKn9CRS2CK9qOH5Mh_DcTAdN-QIAKOuk4pBxDsgFqsrQB6yc6QWSNJe3CLiezuEwD1WlbMAEiUG1YMAqUWnf108vok7wSbooPDGoWn1uHuisvsbZ-Lhyv4hCN42u3Y7iPX-DYW5nItaI"/>
+</div>
+<div>
+<div class="font-semibold">Carlos Méndez</div>
+<div class="text-on-surface-variant font-label-sm text-label-sm mt-1">ID: DOC-2019-042</div>
+</div>
+</div>
+</td>
+<td class="p-lg py-4 text-on-surface-variant">carlos.mendez@instituto.edu</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#F0FDFA] text-[#0F766E] border border-[#99F6E4]">Docente</span>
+</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Activo
+                                        </span>
+</td>
+<td class="p-lg py-4 text-on-surface-variant">Múltiples (3)</td>
+<td class="p-lg py-4 text-right">
+<div class="flex items-center justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Ver Perfil">
+<span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1" title="Desactivar">
+<span class="material-symbols-outlined" style="font-size: 20px;">person_off</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group bg-surface-container-lowest">
+<td class="p-lg py-4">
+<div class="flex items-center gap-md">
+<div class="h-10 w-10 rounded-full bg-surface-container-highest overflow-hidden flex items-center justify-center text-on-surface-variant font-bold">
+                                                 LM
+                                            </div>
+<div>
+<div class="font-semibold text-on-surface-variant">Laura Morales</div>
+<div class="text-outline font-label-sm text-label-sm mt-1">ID: EST-2022-115</div>
+</div>
+</div>
+</td>
+<td class="p-lg py-4 text-outline">laura.morales@instituto.edu</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-surface-container text-on-surface border border-outline-variant opacity-75">Estudiante</span>
+</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant border border-outline-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> Inactivo
+                                        </span>
+</td>
+<td class="p-lg py-4 text-outline">-</td>
+<td class="p-lg py-4 text-right">
+<div class="flex items-center justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Ver Perfil">
+<span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary-container transition-colors p-1" title="Activar">
+<span class="material-symbols-outlined" style="font-size: 20px;">person_add</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-lg py-4">
+<div class="flex items-center gap-md">
+<div class="h-10 w-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A portrait of a male administrative staff member in a professional setting. He is wearing a smart casual shirt. The lighting is crisp and the background is a clean, neutral white or light grey, fitting for an ID badge style photo." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD65gAdxclBdZ_DO-WsMQfwlD0Tx7tUwexPgF5Vhp5oIbOxNo6ZW2H2X_lLnyCQdoKeqL2mQjR_nIREEdDnY46mn2MSonNTMuz1IO6vHoAcvO5G7S7Z5tnfZo1EL1A4EoRKJZ0X7_6wpNd8TORpYpYJk2IXXmuubZI2ALD7xKhNHvwWiykyYX_Yb_KPsbw9LTtT64s65KoJJWmCRy2o-pGXgCHlwaLxxClPydx6Zq7gJtzIhoaLXakiqjbTqdZdGsSTLk5UQO1K1eo0"/>
+</div>
+<div>
+<div class="font-semibold flex items-center gap-1">Roberto Silva <span class="material-symbols-outlined text-tertiary-fixed-dim" style="font-size: 16px;">verified</span></div>
+<div class="text-on-surface-variant font-label-sm text-label-sm mt-1">ID: ADM-2015-001</div>
+</div>
+</div>
+</td>
+<td class="p-lg py-4 text-on-surface-variant">admin@instituto.edu</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]">Admin</span>
+</td>
+<td class="p-lg py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> Activo
+                                        </span>
+</td>
+<td class="p-lg py-4 text-on-surface-variant">Global</td>
+<td class="p-lg py-4 text-right">
+<div class="flex items-center justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Ver Perfil">
+<span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Editar">
+<span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="bg-surface-variant/50 border-t border-outline-variant p-md flex items-center justify-between font-body-md text-body-md text-on-surface-variant">
+<div>Mostrando 1 a 4 de 128 usuarios</div>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded hover:bg-surface border border-transparent hover:border-outline-variant disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary text-white font-medium flex items-center justify-center">1</button>
+<button class="w-8 h-8 rounded hover:bg-surface border border-transparent hover:border-outline-variant font-medium flex items-center justify-center">2</button>
+<button class="w-8 h-8 rounded hover:bg-surface border border-transparent hover:border-outline-variant font-medium flex items-center justify-center">3</button>
+<span class="px-1">...</span>
+<button class="w-8 h-8 rounded hover:bg-surface border border-transparent hover:border-outline-variant font-medium flex items-center justify-center">12</button>
+<button class="p-1 rounded hover:bg-surface border border-transparent hover:border-outline-variant">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

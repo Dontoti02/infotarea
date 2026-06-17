@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>InfoTarea - Lista de Tareas (Docente)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#3e4947",
+                      "surface-dim": "#ccdbf3",
+                      "on-error": "#ffffff",
+                      "on-background": "#0d1c2e",
+                      "surface-container": "#e6eeff",
+                      "tertiary-fixed-dim": "#4ae176",
+                      "surface-container-highest": "#d5e3fc",
+                      "outline-variant": "#bdc9c6",
+                      "surface-variant": "#d5e3fc",
+                      "surface-bright": "#f8f9ff",
+                      "tertiary-container": "#007a35",
+                      "on-tertiary-fixed": "#002109",
+                      "error-container": "#ffdad6",
+                      "outline": "#6e7977",
+                      "inverse-primary": "#80d5cb",
+                      "tertiary": "#005e27",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-tertiary-container": "#a1ffaf",
+                      "error": "#ba1a1a",
+                      "background": "#f8f9ff",
+                      "surface-container-high": "#dce9ff",
+                      "secondary-container": "#7cf994",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#80d5cb",
+                      "on-secondary-fixed-variant": "#005320",
+                      "surface-container-low": "#eff4ff",
+                      "primary-fixed": "#9cf2e8",
+                      "secondary": "#006e2d",
+                      "surface": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#0d1c2e",
+                      "on-primary-fixed-variant": "#00504a",
+                      "secondary-fixed": "#7ffc97",
+                      "on-tertiary-fixed-variant": "#005321",
+                      "on-primary-container": "#a3faef",
+                      "on-primary-fixed": "#00201d",
+                      "primary-container": "#0f766e",
+                      "secondary-fixed-dim": "#62df7d",
+                      "primary": "#005c55",
+                      "on-secondary-fixed": "#002109",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#233144",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed": "#6bff8f",
+                      "surface-tint": "#006a63",
+                      "on-secondary-container": "#007230"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "lg": "24px",
+                      "xs": "4px",
+                      "sidebar-width": "280px",
+                      "base": "4px",
+                      "md": "16px",
+                      "xl": "32px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "title-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "title-lg": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "label-sm": ["11px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.25", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .shadow-level-1 { box-shadow: 0px 1px 3px rgba(15, 23, 42, 0.05); }
+        .shadow-level-2 { box-shadow: 0px 10px 15px -3px rgba(15, 23, 42, 0.08); }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-on-surface font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopAppBar (Mobile Only - Replaced by Top nav on Desktop structurally but keeping logic) -->
+<header class="md:hidden bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center h-16 px-md sticky top-0 z-40">
+<div class="font-title-lg text-title-lg font-semibold text-on-surface">InfoTarea</div>
+<div class="flex gap-sm">
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container rounded-full p-2 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex bg-surface-container-lowest text-primary font-title-lg text-title-lg fixed left-0 top-0 h-full w-sidebar-width border-r border-outline-variant shadow-sm flex-col py-xl z-50">
+<div class="px-lg mb-xl">
+<div class="flex items-center gap-sm">
+<img alt="InfoTarea Logo" class="w-10 h-10 rounded-full" data-alt="A clean, minimalist logo icon for an academic management app, featuring a stylized open book or graduation cap in deep teal and slate colors. The design is modern, flat, and vector-style on a crisp white background. High resolution, professional corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbLcZ8_LZsqp6bBdFP3EwV0265026a1Z9eYKOsem7lSMcw3KuAk5J4fve9QqNl-y2YEFVmFWroFfIVZZ_UjPRqwUagtzUqAiC5h2fEmdXTlxLqyhX2SbYlnJTOcEJWLp_0ukCEl846rsNHg75x1HXO9i-tsOtHa3QyTplCT0fjN83FTthpJ0o1dO762dq6UoHBzkNhBGEwiXhBqD-LFSgLGTMNP9hAQk9XTiWS28V1YQBK50ln1OAPR744ahvj7WlB32fHWkHLSD74"/>
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary text-[24px]">InfoTarea</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Academic Management</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-sm flex flex-col gap-xs">
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span> Avisos
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span> Cursos
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span> Contenido
+            </a>
+<a class="flex items-center gap-md bg-[#F0FDFA] text-primary border-l-4 border-primary px-md py-sm rounded-r-full font-body-md text-body-md transition-all duration-200 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" style="font-variation-settings: 'FILL' 1;">assignment</span> Tareas
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="assignment_turned_in">assignment_turned_in</span> Entregas
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span> Seguimiento
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span> Usuarios
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span> Roles
+            </a>
+</div>
+<div class="px-sm mt-auto pt-md border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span> Notificaciones
+            </a>
+<a class="flex items-center gap-md text-on-surface-variant hover:bg-surface-container-high px-md py-sm transition-colors rounded-r-full font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> Configuración
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-sidebar-width flex flex-col min-h-screen">
+<!-- Desktop Top App Bar area (reused structure for consistency) -->
+<div class="hidden md:flex justify-between items-center h-16 px-xl bg-surface/80 backdrop-blur-md sticky top-0 z-30">
+<div class="font-headline-md text-headline-md text-on-surface font-semibold">Tareas</div>
+<div class="flex items-center gap-md">
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors shadow-level-1 flex items-center gap-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span> Crear Tarea
+                </button>
+</div>
+</div>
+<!-- Content Area -->
+<div class="p-md md:p-xl flex-1 flex flex-col gap-xl max-w-container-max mx-auto w-full">
+<!-- Mobile Header & Actions -->
+<div class="md:hidden flex justify-between items-center mb-sm">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-bold">Tareas</h2>
+</div>
+<!-- Toolbar: Tabs & Filters -->
+<div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-md">
+<!-- Tabs -->
+<div class="flex p-1 bg-[#F1F5F9] rounded-xl inline-flex shadow-inner">
+<button class="px-lg py-sm bg-surface-container-lowest text-primary font-label-md text-label-md rounded-lg shadow-sm border border-outline-variant/30 flex items-center gap-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="list" style="font-variation-settings: 'FILL' 1;">list</span> Lista
+                    </button>
+<button class="px-lg py-sm text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors flex items-center gap-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_month">calendar_month</span> Calendario
+                    </button>
+<button class="px-lg py-sm text-on-surface-variant font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors flex items-center gap-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="view_kanban">view_kanban</span> Kanban
+                    </button>
+</div>
+<!-- Filters -->
+<div class="flex flex-wrap gap-sm w-full xl:w-auto">
+<div class="relative flex-1 min-w-[150px]">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[18px]" data-icon="search">search</span>
+<input class="w-full pl-xl pr-sm py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md focus:ring-2 focus:ring-primary focus:border-primary transition-shadow" placeholder="Buscar tarea..." type="text"/>
+</div>
+<select class="px-sm py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-label-md text-label-md text-on-surface-variant focus:ring-2 focus:ring-primary focus:border-primary">
+<option>Todos los Cursos</option>
+<option>Matemáticas Avanzadas</option>
+<option>Física Cuántica</option>
+<option>Historia del Arte</option>
+</select>
+<select class="px-sm py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-label-md text-label-md text-on-surface-variant focus:ring-2 focus:ring-primary focus:border-primary">
+<option>Cualquier Estado</option>
+<option>Pendiente</option>
+<option>Entregado</option>
+<option>Vencido</option>
+</select>
+</div>
+</div>
+<!-- Task List Grid (Bento/Card Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg">
+<!-- Task Card 1 (Pendiente) -->
+<div class="bg-[#FFFFFF] p-lg rounded-xl shadow-level-1 hover:shadow-level-2 transition-shadow border border-outline-variant/30 flex flex-col gap-md cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-amber-500/50"></div>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Matemáticas Avanzadas</span>
+<h3 class="font-title-lg text-title-lg text-on-surface">Práctica de Derivadas</h3>
+</div>
+<span class="px-sm py-1 rounded-md bg-amber-100 text-amber-800 font-label-md text-label-md border border-amber-200">Pendiente</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Resolver los ejercicios 1 al 15 del capítulo 4. Asegurarse de mostrar todo el procedimiento paso a paso.</p>
+<div class="mt-auto pt-md border-t border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">24 Oct 2023</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="font-label-md text-label-md text-on-surface">12/30</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entregas</span>
+</div>
+</div>
+</div>
+<!-- Task Card 2 (Entregado/Revisando) -->
+<div class="bg-[#FFFFFF] p-lg rounded-xl shadow-level-1 hover:shadow-level-2 transition-shadow border border-outline-variant/30 flex flex-col gap-md cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-emerald-500/50"></div>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Historia del Arte</span>
+<h3 class="font-title-lg text-title-lg text-on-surface">Ensayo: Renacimiento</h3>
+</div>
+<span class="px-sm py-1 rounded-md bg-emerald-100 text-emerald-800 font-label-md text-label-md border border-emerald-200">Para Revisar</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Ensayo crítico sobre el impacto de Da Vinci en la técnica del sfumato. Mínimo 1500 palabras.</p>
+<div class="mt-auto pt-md border-t border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">20 Oct 2023</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="font-label-md text-label-md text-emerald-700 font-bold">28/28</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entregas</span>
+</div>
+</div>
+</div>
+<!-- Task Card 3 (Vencido) -->
+<div class="bg-[#FFFFFF] p-lg rounded-xl shadow-level-1 hover:shadow-level-2 transition-shadow border border-outline-variant/30 flex flex-col gap-md cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-rose-500/50"></div>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Física Cuántica</span>
+<h3 class="font-title-lg text-title-lg text-on-surface">Laboratorio: Efecto Fotoeléctrico</h3>
+</div>
+<span class="px-sm py-1 rounded-md bg-rose-100 text-rose-800 font-label-md text-label-md border border-rose-200">Vencido</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Reporte de laboratorio con análisis de datos obtenidos en la sesión práctica del martes.</p>
+<div class="mt-auto pt-md border-t border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-sm text-rose-700">
+<span class="material-symbols-outlined text-[16px]" data-icon="warning">warning</span>
+<span class="font-label-md text-label-md">15 Oct 2023</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="font-label-md text-label-md text-on-surface">25/30</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entregas</span>
+</div>
+</div>
+</div>
+<!-- Task Card 4 -->
+<div class="bg-[#FFFFFF] p-lg rounded-xl shadow-level-1 hover:shadow-level-2 transition-shadow border border-outline-variant/30 flex flex-col gap-md cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-[#0f766e]"></div>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Literatura Moderna</span>
+<h3 class="font-title-lg text-title-lg text-on-surface">Análisis de Poesía</h3>
+</div>
+<span class="px-sm py-1 rounded-md bg-teal-50 text-teal-800 font-label-md text-label-md border border-teal-200">Revisado</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Completar la matriz de análisis para el poema asignado en clase. Subir en formato PDF.</p>
+<div class="mt-auto pt-md border-t border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">10 Oct 2023</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="font-label-md text-label-md text-on-surface">30/30</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Entregas</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Mobile FAB -->
+<button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-level-2 flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-40">
+<span class="material-symbols-outlined text-[24px]" data-icon="add">add</span>
+</button>
+</div>
+</main>
+</body></html>

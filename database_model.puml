@@ -1,0 +1,144 @@
+@startuml Infotarea_DB
+
+!theme plain
+skinparam linetype ortho
+skinparam roundcorner 4
+skinparam shadowing false
+skinparam classHeaderFontColor #000000
+skinparam classStereotypeFontColor #000000
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #000000
+    ArrowColor #000000
+    HeaderBackgroundColor #E5E7EB
+    HeaderFontColor #000000
+    FontColor #000000
+    AttributeFontColor #000000
+    FontSize 12
+    AttributeFontSize 11
+}
+
+' ======================================================
+' TIPOS ENUMERADOS (ENUMS)
+' ======================================================
+enum rol_usuario <<Enum>> {
+    administrador
+    docente
+    estudiante
+}
+
+enum categoria_anuncio <<Enum>> {
+    urgente
+    academico
+    evento
+}
+
+enum tipo_tarea <<Enum>> {
+    ensayo
+    examen
+    tarea
+}
+
+enum estado_entrega <<Enum>> {
+    pendiente
+    revisado
+}
+
+' ======================================================
+' ENTIDADES (TABLAS)
+' ======================================================
+
+entity "usuarios_auth" as usuarios_auth {
+    * id : UUID <<PK>>
+    --
+    correo : TEXT
+    contrasena_encriptada : TEXT
+    metadatos_usuario : JSONB
+    metadatos_app : JSONB
+    creado_en : TIMESTAMPTZ
+    actualizado_en : TIMESTAMPTZ
+}
+
+entity "perfiles" as perfiles {
+    * id : UUID <<PK>> <<FK>>
+    --
+    * nombre_completo : TEXT
+    * rol : rol_usuario [POR_DEFECTO: 'estudiante']
+    url_avatar : TEXT
+    biografia : TEXT
+    creado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+    actualizado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+}
+
+entity "cursos" as cursos {
+    * id : UUID <<PK>> [POR_DEFECTO: gen_random_uuid()]
+    --
+    * nombre : TEXT
+    * seccion : TEXT
+    url_imagen : TEXT
+    creado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+}
+
+entity "miembros_curso" as miembros_curso {
+    * curso_id : UUID <<PK>> <<FK>>
+    * perfil_id : UUID <<PK>> <<FK>>
+}
+
+entity "tareas" as tareas {
+    * id : UUID <<PK>> [POR_DEFECTO: gen_random_uuid()]
+    --
+    curso_id : UUID <<FK>>
+    * titulo : TEXT
+    descripcion : TEXT
+    fecha_limite : TIMESTAMPTZ
+    * tipo_tarea : tipo_tarea [POR_DEFECTO: 'tarea']
+    creado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+}
+
+entity "entregas" as entregas {
+    * id : UUID <<PK>> [POR_DEFECTO: gen_random_uuid()]
+    --
+    tarea_id : UUID <<FK>>
+    estudiante_id : UUID <<FK>>
+    contenido : TEXT
+    * estado : estado_entrega [POR_DEFECTO: 'pendiente']
+    calificacion : DECIMAL(4,2)
+    retroalimentacion : TEXT
+    creado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+}
+
+entity "anuncios" as anuncios {
+    * id : UUID <<PK>> [POR_DEFECTO: gen_random_uuid()]
+    --
+    autor_id : UUID <<FK>>
+    * titulo : TEXT
+    * content : TEXT
+    * categoria : categoria_anuncio [POR_DEFECTO: 'academico']
+    creado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+}
+
+entity "recursos" as recursos {
+    * id : UUID <<PK>> [POR_DEFECTO: gen_random_uuid()]
+    --
+    curso_id : UUID <<FK>>
+    * nombre : TEXT
+    tipo_archivo : TEXT
+    * url_archivo : TEXT
+    tamano_archivo : BIGINT
+    creado_en : TIMESTAMPTZ [POR_DEFECTO: NOW()]
+}
+
+' ======================================================
+' RELACIONES Y CARDINALIDADES
+' ======================================================
+
+usuarios_auth ||--|| perfiles : "se extiende a"
+perfiles ||--o{ miembros_curso : "pertenece a"
+cursos ||--o{ miembros_curso : "tiene inscritos"
+cursos ||--o{ tareas : "contiene"
+cursos ||--o{ recursos : "ofrece"
+perfiles ||--o{ anuncios : "redacta"
+perfiles ||--o{ entregas : "entrega"
+tareas ||--o{ entregas : "recibe"
+
+@enduml
