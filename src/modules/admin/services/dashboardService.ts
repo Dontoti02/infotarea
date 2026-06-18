@@ -97,14 +97,13 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
       .limit(5),
   ]);
 
-  // Build weekly activity by day
+  // Build weekly activity by day (Lunes a Viernes)
+  const orderDays = ["Lun", "Mar", "Mié", "Jue", "Vie"];
   const weeklyMap: Record<string, { submissions: number; created: number }> = {};
-  for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const key = DAYS_SHORT[d.getDay()];
-    weeklyMap[key] = { submissions: 0, created: 0 };
-  }
+
+  orderDays.forEach((day) => {
+    weeklyMap[day] = { submissions: 0, created: 0 };
+  });
 
   (submissions.data ?? []).forEach((s) => {
     const d = new Date(s.created_at);
@@ -118,10 +117,10 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     if (weeklyMap[key]) weeklyMap[key].created++;
   });
 
-  const weeklyActivity = Object.entries(weeklyMap).map(([day, vals]) => ({
+  const weeklyActivity = orderDays.map((day) => ({
     day,
-    submissions: vals.submissions,
-    created: vals.created,
+    submissions: weeklyMap[day].submissions,
+    created: weeklyMap[day].created,
   }));
 
   // 4. Recent activity
