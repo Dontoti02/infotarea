@@ -305,25 +305,29 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
         </div>
 
         {/* Visual Preferences */}
-        <div className="bg-surface-container-lowest rounded-xl p-lg shadow-sm border border-outline-variant/30">
-          <h3 className="text-title-lg font-bold text-on-surface mb-md flex items-center gap-sm">
-            <Palette className="text-primary" size={20} />
-            Preferencias Visuales
-          </h3>
-          <div className="space-y-md">
-            <div className="flex items-center justify-between py-sm">
-              <div>
-                <p className="text-body-md font-bold text-on-surface">Modo Oscuro</p>
-                <p className="text-label-sm font-medium text-on-surface-variant">Cambiar la apariencia de la interfaz</p>
+        <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
+          <div className="bg-gradient-to-r from-primary/10 to-transparent px-lg py-md border-b border-outline-variant/30 flex items-center gap-sm">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <Palette className="text-primary" size={20} />
+            </div>
+            <h3 className="text-title-lg font-bold text-on-surface">Apariencia Visual</h3>
+          </div>
+          <div className="p-lg">
+            <div className="flex items-center justify-between py-sm bg-surface-container-low p-md rounded-xl border border-outline-variant/50 shadow-sm transition-all hover:border-primary/30">
+              <div className="flex flex-col gap-1">
+                <p className="text-body-lg font-bold text-on-surface">Modo Oscuro</p>
+                <p className="text-body-sm font-medium text-on-surface-variant max-w-sm">
+                  Cambia el aspecto de la interfaz a colores más oscuros para relajar la vista en entornos de poca luz.
+                </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer group hover:scale-105 transition-transform">
                 <input
                   className="sr-only peer"
                   type="checkbox"
                   checked={isDarkMode}
                   onChange={(e) => toggleDarkMode(e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-outline-variant rounded-full peer peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                <div className="w-14 h-7 bg-outline-variant rounded-full peer peer-focus:ring-4 peer-focus:ring-primary/20 peer-checked:bg-primary peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:border-white shadow-inner" />
               </label>
             </div>
           </div>
