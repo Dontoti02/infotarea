@@ -18,12 +18,15 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Props {
   submissionId: string;
 }
 
 export function SubmissionReview({ submissionId }: Props) {
+  const pathname = usePathname();
+  const isAdminContext = pathname.startsWith('/admin');
   const [submission, setSubmission] = useState<any>(null);
   const [task, setTask] = useState<any>(null);
   const [student, setStudent] = useState<any>(null);
@@ -202,7 +205,7 @@ export function SubmissionReview({ submissionId }: Props) {
           <AlertCircle size={48} className="mx-auto text-error mb-4" />
           <h3 className="text-title-lg font-bold text-on-surface mb-2">Entrega no encontrada</h3>
           <p className="text-body-md text-on-surface-variant">{error || "La entrega solicitada no existe."}</p>
-          <Link href="/teacher/tareas" className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-on-primary font-bold text-label-md hover:bg-primary-container transition-colors">
+          <Link href={isAdminContext ? "/admin/tareas" : "/teacher/tareas"} className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-on-primary font-bold text-label-md hover:bg-primary-container transition-colors">
             Volver a Tareas
           </Link>
         </div>
