@@ -11,15 +11,17 @@ import {
   CheckCircle2,
   Loader2,
   FolderOpen,
-  Trash2
+  Trash2,
+  Edit2
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { usePathname } from "next/navigation";
 
 export function TaskManagement() {
   const pathname = usePathname();
   const isAdminContext = pathname.startsWith('/admin');
+  const router = useRouter();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -251,6 +253,17 @@ export function TaskManagement() {
                   <span className={`px-sm py-1 rounded-md font-bold text-label-md border ${task.statusStyle}`}>
                     {task.status}
                   </span>
+                                    <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      router.push(isAdminContext ? `/admin/tareas/${task.id}/editar` : `/teacher/tareas/${task.id}/editar`);
+                    }}
+                    className="p-1.5 rounded-lg text-outline-variant hover:text-primary hover:bg-primary-container/20 transition-all"
+                    title="Editar tarea"
+                  >
+                    <Edit2 size={18} />
+                  </button>
                   <button
                     onClick={(e) => handleDeleteTask(e, task.id)}
                     className="p-1.5 rounded-lg text-outline-variant hover:text-error hover:bg-error-container/20 transition-all"

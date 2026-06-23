@@ -21,7 +21,7 @@ import {
   File
 } from "lucide-react";
 
-export function TaskCreation() {
+export function TaskCreation({ taskId }: { taskId?: string }) {
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [title, setTitle] = useState("");
@@ -41,7 +41,39 @@ export function TaskCreation() {
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("course_id");
 
+
   useEffect(() => {
+    async function loadTaskData() {
+      if (!taskId) return;
+      try {
+        const { data, error } = await supabase
+          .from("tasks")
+          .select("*")
+          .eq("id", taskId)
+          .single();
+        if (data && !error) {
+          setTitle(data.title || "");
+          if (editorRef.current) {
+            editorRef.current.innerHTML = data.description || "";
+          }
+          if (data.due_date) {
+            // Fix datetime format for input type="datetime-local" (YYYY-MM-DDThh:mm)
+            const dateStr = new Date(data.due_date).toISOString().slice(0, 16);
+            setDueDate(dateStr);
+          }
+          if (data.type) setTaskType(data.type);
+          if (data.duration_minutes) setDurationMinutes(data.duration_minutes);
+          setSelectedCourseId(data.course_id);
+          // (Note: we cannot set File objects from urls directly, so attachment logic remains unchanged for now, maybe we can show existing attachment later, but for now we leave it simple)
+        }
+      } catch (err) {
+        console.error("Error loading task data:", err);
+      }
+    }
+    loadTaskData();
+  }, [taskId]);
+
+useEffect(() => {
     async function loadCourses() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -62,10 +94,12 @@ export function TaskCreation() {
         if (data && !error) {
           setCourses(data);
           // Pre-select from query param first, otherwise default to first course
-          const targetId = preselectedCourseId && data.find((c: any) => c.id === preselectedCourseId)
-            ? preselectedCourseId
-            : data.length > 0 ? data[0].id : "";
-          setSelectedCourseId(targetId);
+          if (!taskId) { // Only pre-select if not editing an existing task, let loadTaskData handle edit case
+            const targetId = preselectedCourseId && data.find((c: any) => c.id === preselectedCourseId)
+              ? preselectedCourseId
+              : data.length > 0 ? data[0].id : "";
+            setSelectedCourseId(targetId);
+          }
         }
       } catch (err) {
         console.error("Error loading courses:", err);
@@ -148,23 +182,35 @@ export function TaskCreation() {
         attachmentName = attachmentFile.name;
       }
 
-      const { error: insertError } = await supabase.from("tasks").insert({
+      const taskData: any = {
         course_id: selectedCourseId,
         title: title.trim(),
         description: description || null,
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
         task_type: taskType,
         duration_minutes: taskType === "exam" && durationMinutes ? Number(durationMinutes) : null,
-        attachment_url: attachmentUrl,
-        attachment_name: attachmentName,
-      });
+      };
+
+      if (attachmentUrl) {
+        taskData.attachment_url = attachmentUrl;
+        taskData.attachment_name = attachmentName;
+      }
+
+      let insertError;
+      if (taskId) {
+        const { error } = await supabase.from("tasks").update(taskData).eq("id", taskId);
+        insertError = error;
+      } else {
+        const { error } = await supabase.from("tasks").insert(taskData);
+        insertError = error;
+      }
 
       if (insertError) throw new Error(insertError.message);
 
       setSuccess(true);
       setTimeout(() => router.back(), 1500);
     } catch (err: any) {
-      setError(err.message || "Error al crear la tarea");
+      setError(err.message || (taskId ? "Error al actualizar la tarea" : "Error al crear la tarea"));
       setLoading(false);
     }
   };
@@ -182,7 +228,7 @@ export function TaskCreation() {
         {success && (
           <div className="bg-secondary-container/20 border border-secondary/20 text-secondary p-4 rounded-xl flex items-center gap-3 text-body-md animate-fade-in">
             <CheckCircle2 size={20} className="shrink-0" />
-            <span>¡Tarea creada y asignada con éxito! Redirigiendo...</span>
+            <span>{taskId ? "¡Tarea actualizada con éxito!" : "¡Tarea creada y asignada con éxito!"} Redirigiendo...</span>
           </div>
         )}
 
@@ -424,7 +470,7 @@ export function TaskCreation() {
             className="w-full bg-primary hover:bg-primary-container text-on-primary font-bold text-label-md py-3 px-6 rounded-full transition-all flex justify-center items-center gap-2 disabled:opacity-50 shadow-sm"
           >
             {loading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-            {loading ? "Publicando..." : "Publicar Tarea"}
+            {loading ? (taskId ? "Guardando..." : "Publicando...") : (taskId ? "Guardar Cambios" : "Publicar Tarea")}
           </button>
           <button
             type="button"
