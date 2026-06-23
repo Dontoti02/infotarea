@@ -15,8 +15,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { usePathname } from "next/navigation";
 
 export function TaskManagement() {
+  const pathname = usePathname();
+  const isAdminContext = pathname.startsWith('/admin');
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -235,7 +238,7 @@ export function TaskManagement() {
           {filteredTasks.map((task) => (
             <Link 
               key={task.id} 
-              href={`/teacher/entregas?task_id=${task.id}`}
+              href={isAdminContext ? `/admin/entregas?task_id=${task.id}` : `/teacher/entregas?task_id=${task.id}`}
               className="bg-surface-container-lowest p-lg rounded-xl shadow-sm hover:shadow-md transition-shadow border border-outline-variant/30 flex flex-col gap-md cursor-pointer relative overflow-hidden group"
             >
               <div className={`absolute top-0 left-0 w-1 h-full ${task.accent}`}></div>

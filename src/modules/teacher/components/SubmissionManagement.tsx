@@ -18,9 +18,11 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 export function SubmissionManagement() {
+  const pathname = usePathname();
+  const isAdminContext = pathname.startsWith('/admin');
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialTaskId = searchParams.get("task_id");
@@ -50,11 +52,22 @@ export function SubmissionManagement() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await supabase
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        let query = supabase
           .from("courses")
           .select("id, name, section")
-          .eq("teacher_id", user.id)
           .order("name", { ascending: true });
+
+        if (profile?.role !== "admin") {
+          query = query.eq("teacher_id", user.id);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         
@@ -345,7 +358,7 @@ export function SubmissionManagement() {
             ) : tasks.length === 0 ? (
               <div className="h-10 px-md flex items-center justify-between bg-surface border border-outline-variant rounded-xl text-on-surface-variant">
                 <span className="text-body-md font-medium text-error">Sin tareas creadas</span>
-                <Link href="/teacher/tareas/nueva" className="text-label-sm font-bold text-primary hover:underline">
+                <Link href={isAdminContext ? "/admin/tareas/nueva" : "/teacher/tareas/nueva"} className="text-label-sm font-bold text-primary hover:underline">
                   Crear Tarea
                 </Link>
               </div>
@@ -576,7 +589,7 @@ export function SubmissionManagement() {
                             </button>
                           ) : sub.status === "reviewed" ? (
                             <Link
-                              href={`/teacher/entregas/${sub.submissionId}`}
+                              href={isAdminContext ? `/admin/entregas/${sub.submissionId}` : `/teacher/entregas/${sub.submissionId}`}
                               className="inline-flex items-center gap-1.5 px-md py-1.5 rounded-xl border border-secondary text-secondary hover:bg-surface-container-low font-bold text-label-md transition-all shadow-sm"
                             >
                               <Eye size={16} />
@@ -584,7 +597,7 @@ export function SubmissionManagement() {
                             </Link>
                           ) : (
                             <Link
-                              href={`/teacher/entregas/${sub.submissionId}`}
+                              href={isAdminContext ? `/admin/entregas/${sub.submissionId}` : `/teacher/entregas/${sub.submissionId}`}
                               className="inline-flex items-center gap-1.5 px-md py-1.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-bold text-label-md transition-all shadow-sm"
                             >
                               Revisar
@@ -607,7 +620,7 @@ export function SubmissionManagement() {
             Aún no has creado ninguna tarea en este curso. Crea tu primera tarea para que los alumnos comiencen a entregar sus soluciones.
           </p>
           <Link
-            href="/teacher/tareas/nueva"
+            href={isAdminContext ? "/admin/tareas/nueva" : "/teacher/tareas/nueva"}
             className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-primary text-on-primary font-bold text-label-md hover:bg-primary-container transition-colors shadow-sm"
           >
             Crear Nueva Tarea
