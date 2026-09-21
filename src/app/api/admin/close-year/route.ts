@@ -24,7 +24,7 @@ function getAdminClient() {
 async function verifyAdmin() {
   const supabaseServer = await createSSRClient();
   const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
-  if (authError || !user) return { user: null, profile: null };
+  if (authError || !user) return { user: null, profile: null, supabaseServer: null };
 
   const { data: profile } = await supabaseServer
     .from('profiles')
@@ -32,14 +32,14 @@ async function verifyAdmin() {
     .eq('id', user.id)
     .single();
 
-  return { user, profile };
+  return { user, profile, supabaseServer };
 }
 
 // ─── POST: Close the current academic year ───────────────────────────────────
 export async function POST(request: Request) {
   try {
-    const { user, profile } = await verifyAdmin();
-    if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const { user, profile, supabaseServer } = await verifyAdmin();
+    if (!user || !supabaseServer) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     if (profile?.role !== 'admin') return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
 
     const { yearLabel, yearNumber } = await request.json() as {
@@ -51,8 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 });
     }
 
-    const adminClient = getAdminClient();
-    if (!adminClient) return NextResponse.json({ error: 'Se requiere SUPABASE_SERVICE_ROLE_KEY' }, { status: 503 });
+    const adminClient = getAdminClient() || supabaseServer;
 
     // Gather statistics
     const [
@@ -157,12 +156,11 @@ export async function POST(request: Request) {
 // ─── GET: Fetch academic periods history + current stats ─────────────────────
 export async function GET() {
   try {
-    const { user, profile } = await verifyAdmin();
-    if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const { user, profile, supabaseServer } = await verifyAdmin();
+    if (!user || !supabaseServer) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     if (profile?.role !== 'admin') return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
 
-    const adminClient = getAdminClient();
-    if (!adminClient) return NextResponse.json({ error: 'Se requiere SUPABASE_SERVICE_ROLE_KEY' }, { status: 503 });
+    const adminClient = getAdminClient() || supabaseServer;
 
     // Fetch periods (using actual DB columns: year, label)
     const { data: periods, error } = await adminClient
