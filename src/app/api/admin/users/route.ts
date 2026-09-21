@@ -30,8 +30,8 @@ export async function POST(request: Request) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     const supabaseVanilla = createVanillaClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vafrsmzqzgfuamrrtyob.supabase.co',
+      serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_nZncHSR3P5rsiXETvcPCvQ_YpM3YJFi',
       {
         auth: {
           persistSession: false,

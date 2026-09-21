@@ -37,7 +37,7 @@ export async function DELETE(request: Request) {
     }
 
     const adminClient = createVanillaClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vafrsmzqzgfuamrrtyob.supabase.co',
       serviceRoleKey,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
