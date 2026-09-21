@@ -95,12 +95,13 @@ export async function POST(request: Request) {
       .select('id, name, file_type, file_url, file_size, created_at, course_id')
       .order('created_at', { ascending: false });
 
-    // Insert academic period record (using actual DB column names: year, label)
+    // Insert academic period record (using DB column names: year_label, start_year, end_year)
     const { data: periodData, error: insertError } = await adminClient
       .from('academic_periods')
       .insert({
-        year: yearNumber,
-        label: yearLabel,
+        year_label: yearLabel,
+        start_year: yearNumber,
+        end_year: yearNumber + 1,
         closed_by: user.id,
         total_students: totalStudents ?? 0,
         total_teachers: totalTeachers ?? 0,
@@ -134,7 +135,8 @@ export async function POST(request: Request) {
       success: true,
       period: {
         id: periodData.id,
-        label: periodData.label,
+        label: periodData.year_label,
+        year: periodData.start_year,
         closedAt: periodData.closed_at,
         stats: {
           students: totalStudents ?? 0,
@@ -162,11 +164,11 @@ export async function GET() {
 
     const adminClient = getAdminClient() || supabaseServer;
 
-    // Fetch periods (using actual DB columns: year, label)
+    // Fetch periods (using DB column names: year_label, start_year, end_year)
     const { data: periods, error } = await adminClient
       .from('academic_periods')
       .select(`
-        id, year, label, closed_at, closed_by,
+        id, year_label, start_year, end_year, closed_at, closed_by,
         total_students, total_teachers, total_courses,
         total_tasks, total_submissions, total_notices, total_resources
       `)
@@ -189,8 +191,10 @@ export async function GET() {
       }
     }
 
-    const periodsWithNames = (periods ?? []).map(p => ({
+    const periodsWithNames = (periods ?? []).map((p: any) => ({
       ...p,
+      year: p.start_year,
+      label: p.year_label,
       closed_by_name: adminNames[p.closed_by] || 'Admin',
     }));
 
