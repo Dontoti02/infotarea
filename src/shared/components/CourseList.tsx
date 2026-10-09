@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { translateErrorMessage } from "@/shared/utils/error-translator";
 
 interface Course {
   id: string;
@@ -110,7 +111,7 @@ function CourseModal({ onClose, onSuccess, initialData, userRole }: CourseModalP
         .upload(filePath, imageFile);
 
       if (uploadError) {
-        setError("Error al subir la imagen: " + uploadError.message);
+        setError(translateErrorMessage(uploadError));
         setLoading(false);
         return;
       }
@@ -161,7 +162,7 @@ function CourseModal({ onClose, onSuccess, initialData, userRole }: CourseModalP
         .eq("id", initialData!.id);
 
       if (updateError) {
-        setError(updateError.message);
+        setError(translateErrorMessage(updateError));
         setLoading(false);
         return;
       }
@@ -203,7 +204,7 @@ function CourseModal({ onClose, onSuccess, initialData, userRole }: CourseModalP
       }).select().single();
 
       if (insertError) {
-        setError(insertError.message);
+        setError(translateErrorMessage(insertError));
         setLoading(false);
         return;
       }
@@ -548,7 +549,7 @@ export function CourseList() {
     
     const { error } = await supabase.from("courses").delete().eq("id", courseId).select().single();
     if (error) {
-      alert("Error al eliminar el curso: " + error.message);
+      alert("Error al eliminar el curso: " + translateErrorMessage(error));
     } else {
       setCourses(prev => prev.filter(c => c.id !== courseId));
     }

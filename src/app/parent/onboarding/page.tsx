@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { translateErrorMessage } from "@/shared/utils/error-translator";
 
 interface StudentResult {
   id: string;
@@ -100,7 +101,7 @@ export default function ParentOnboardingPage() {
 
       setSearchResults(data.students || []);
     } catch (err: any) {
-      setMessage({ text: err.message || "Error en la búsqueda", type: "error" });
+      setMessage({ text: translateErrorMessage(err), type: "error" });
     } finally {
       setSearching(false);
     }
@@ -140,7 +141,7 @@ export default function ParentOnboardingPage() {
         type: "success",
       });
     } catch (err: any) {
-      setMessage({ text: err.message || "Error al vincular", type: "error" });
+      setMessage({ text: translateErrorMessage(err), type: "error" });
     } finally {
       setLinkingId(null);
     }
@@ -163,7 +164,7 @@ export default function ParentOnboardingPage() {
       setLinkedChildren((prev) => prev.filter((c) => c.id !== studentId));
       setMessage({ text: "Hijo desvinculado de la cuenta", type: "success" });
     } catch (err: any) {
-      setMessage({ text: err.message || "Error al desvincular", type: "error" });
+      setMessage({ text: translateErrorMessage(err), type: "error" });
     } finally {
       setUnlinkingId(null);
     }

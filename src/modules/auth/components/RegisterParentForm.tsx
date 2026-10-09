@@ -5,6 +5,7 @@ import { Mail, Lock, User, Phone, Users, Loader2, AlertCircle, CheckCircle2, Eye
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { translateErrorMessage } from "@/shared/utils/error-translator";
 
 export function RegisterParentForm() {
   const [fullName, setFullName] = useState("");
@@ -68,7 +69,7 @@ export function RegisterParentForm() {
         router.refresh();
       }, 1500);
     } catch (err: any) {
-      setError(err.message || "Error al procesar el registro");
+      setError(translateErrorMessage(err));
     } finally {
       setLoading(false);
     }

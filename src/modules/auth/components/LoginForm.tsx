@@ -5,6 +5,7 @@ import { Mail, Lock, LogIn, Loader2, AlertCircle, School, Eye, EyeOff } from "lu
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { translateErrorMessage } from "@/shared/utils/error-translator";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -97,7 +98,7 @@ export function LoginForm() {
       router.push(roleRedirects[profile.role] || "/");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Credenciales inválidas");
+      setError(translateErrorMessage(err));
     } finally {
       setLoading(false);
     }
