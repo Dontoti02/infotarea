@@ -90,8 +90,8 @@ export function CommunicationHub({
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            <Megaphone className="w-4 h-4 text-amber-600" />
-            <span>Avisos de Dirección</span>
+            <MessageSquare className="w-4 h-4 text-amber-600" />
+            <span>Chat con Dirección</span>
           </button>
         </div>
       )}
