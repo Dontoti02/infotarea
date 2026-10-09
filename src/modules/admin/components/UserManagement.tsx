@@ -553,6 +553,46 @@ function ViewUserModal({
   );
 }
 
+export function downloadExcelTemplate() {
+  const templateData = [
+    {
+      "Nombres": "Pérez Rodríguez, Juan Carlos",
+      "Grado": "1° Grado",
+      "Sección": "A",
+    },
+    {
+      "Nombres": "Gómez Salazar, María Fernanda",
+      "Grado": "1° Grado",
+      "Sección": "B",
+    },
+    {
+      "Nombres": "Torres Quispe, Diego Alexander",
+      "Grado": "2° Grado",
+      "Sección": "A",
+    },
+    {
+      "Nombres": "Flores Morales, Valeria Nicole",
+      "Grado": "3° Grado",
+      "Sección": "C",
+    },
+    {
+      "Nombres": "Vargas Castillo, Mateo Sebastián",
+      "Grado": "5° Grado",
+      "Sección": "A",
+    },
+  ];
+
+  const ws = XLSX.utils.json_to_sheet(templateData);
+  ws["!cols"] = [
+    { wch: 35 },
+    { wch: 15 },
+    { wch: 12 },
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Estudiantes");
+  XLSX.writeFile(wb, "Plantilla_Modelo_Importar_Estudiantes.xlsx");
+}
+
 function ImportUsersModal({
   onClose,
   onSuccess
@@ -815,24 +855,47 @@ function ImportUsersModal({
 
           {/* Step 1: Upload File */}
           {parsedData.length === 0 && results.length === 0 && (
-            <div className="border-2 border-dashed border-outline-variant hover:border-primary/50 transition-colors rounded-2xl p-10 flex flex-col items-center justify-center text-center space-y-4 bg-surface-container-low group">
-              <div className="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform">
-                <Upload size={32} className="text-primary" />
+            <div className="space-y-4">
+              {/* Plantilla Excel de Ejemplo */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/20 text-sm">
+                <div className="flex items-center gap-3 text-on-surface">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Download size={20} />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-sm text-on-surface">Plantilla de Excel de Modelo</h5>
+                    <p className="text-xs text-on-surface-variant">Descarga el archivo modelo con las columnas requeridas (Nombres, Grado y Sección) para rellenarlo.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={downloadExcelTemplate}
+                  className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl hover:bg-primary-container transition-all inline-flex items-center justify-center gap-1.5 shadow-xs shrink-0 cursor-pointer active:scale-95"
+                >
+                  <Download size={15} />
+                  <span>Descargar Plantilla (.xlsx)</span>
+                </button>
               </div>
-              <div>
-                <h4 className="text-body-lg font-bold text-on-surface">Selecciona tu archivo de Excel</h4>
-                <p className="text-label-md text-on-surface-variant mt-1">Soporta formatos .xlsx con las columnas &quot;Nombres&quot; y &quot;grado y seccion&quot;</p>
+
+              <div className="border-2 border-dashed border-outline-variant hover:border-primary/50 transition-colors rounded-2xl p-10 flex flex-col items-center justify-center text-center space-y-4 bg-surface-container-low group">
+                <div className="w-16 h-16 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform">
+                  <Upload size={32} className="text-primary" />
+                </div>
+                <div>
+                  <h4 className="text-body-lg font-bold text-on-surface">Selecciona tu archivo de Excel</h4>
+                  <p className="text-label-md text-on-surface-variant mt-1">Soporta formatos .xlsx con las columnas &quot;Nombres&quot; y &quot;grado y seccion&quot;</p>
+                </div>
+                
+                <label className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-label-md cursor-pointer hover:bg-primary-container transition-colors inline-block">
+                  Buscar Archivo
+                  <input 
+                    type="file" 
+                    accept=".xlsx" 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                  />
+                </label>
               </div>
-              
-              <label className="px-5 py-2.5 bg-primary text-on-primary rounded-xl font-bold text-label-md cursor-pointer hover:bg-primary-container transition-colors inline-block">
-                Buscar Archivo
-                <input 
-                  type="file" 
-                  accept=".xlsx" 
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                />
-              </label>
             </div>
           )}
 
@@ -988,16 +1051,23 @@ export function UserManagement() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [viewingUser, setViewingUser] = useState<any | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [gradeFilter, setGradeFilter] = useState("");
-   const [sectionFilter, setSectionFilter] = useState("");
+  const [sectionFilter, setSectionFilter] = useState("");
    
-   const supabase = createClient();
+  const supabase = createClient();
 
-   const fetchUsers = async () => {
-     setLoading(true);
+  const fetchUsers = async () => {
+    setLoading(true);
+
+    // Obtener usuario autenticado actual para protegerlo contra autoeliminación
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      setCurrentAdminId(authUser.id);
+    }
 
      // Step 1: fetch profiles + credentials + course_members
      const { data, error } = await supabase
@@ -1127,6 +1197,11 @@ export function UserManagement() {
    };
 
   const handleDeleteUser = async (id: string, name: string) => {
+    if (id === currentAdminId) {
+      alert("No puedes eliminar tu propia cuenta de administrador.");
+      return;
+    }
+
     if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${name}"?`)) {
       const res = await fetch('/api/admin/delete-user', {
         method: 'DELETE',
@@ -1147,7 +1222,8 @@ export function UserManagement() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const ids = filteredUsers.map(u => u.id);
+      // Excluir la cuenta actual del admin
+      const ids = filteredUsers.filter(u => u.id !== currentAdminId).map(u => u.id);
       setSelectedUserIds(new Set(ids));
     } else {
       setSelectedUserIds(new Set());
@@ -1155,6 +1231,7 @@ export function UserManagement() {
   };
 
   const handleToggleSelectUser = (id: string) => {
+    if (id === currentAdminId) return; // No permitir seleccionar cuenta propia
     const next = new Set(selectedUserIds);
     if (next.has(id)) {
       next.delete(id);
@@ -1165,8 +1242,13 @@ export function UserManagement() {
   };
 
   const handleBulkDeleteUsers = async () => {
-    const selectedCount = selectedUserIds.size;
-    if (selectedCount === 0) return;
+    // Filtrar para asegurar que el admin actual nunca se elimine
+    const idsArray = Array.from(selectedUserIds).filter(id => id !== currentAdminId);
+    const selectedCount = idsArray.length;
+    if (selectedCount === 0) {
+      alert("No hay usuarios válidos seleccionados para eliminar.");
+      return;
+    }
 
     const confirmMessage = selectedCount === 1
       ? '¿Estás seguro de que deseas eliminar al usuario seleccionado?'
@@ -1174,7 +1256,6 @@ export function UserManagement() {
 
     if (confirm(confirmMessage)) {
       setLoading(true);
-      const idsArray = Array.from(selectedUserIds);
       const res = await fetch('/api/admin/delete-user', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -1250,6 +1331,9 @@ export function UserManagement() {
      
      return true;
    });
+
+   const selectableUsers = filteredUsers.filter(u => u.id !== currentAdminId);
+   const isAllSelectableChecked = selectableUsers.length > 0 && selectedUserIds.size === selectableUsers.length;
 
   return (
     <div className="space-y-lg">
@@ -1332,16 +1416,24 @@ export function UserManagement() {
               )}
             </div>
           </div>
-          <div className="flex gap-sm w-full md:w-auto shrink-0 justify-end">
+          <div className="flex flex-wrap gap-sm w-full md:w-auto shrink-0 justify-end">
+            <button 
+              type="button"
+              onClick={downloadExcelTemplate}
+              className="bg-surface border border-outline-variant text-on-surface hover:bg-surface-container font-bold text-label-md px-lg py-3 rounded-lg flex items-center gap-xs transition-all shadow-sm cursor-pointer"
+              title="Descargar plantilla de Excel como modelo para importar"
+            >
+              <Download size={18} className="text-primary" /> Plantilla Excel
+            </button>
             <button 
               onClick={() => setShowImportModal(true)}
-              className="bg-surface border border-outline-variant text-on-surface hover:bg-surface-container font-bold text-label-md px-lg py-3 rounded-lg flex items-center gap-xs transition-all shadow-sm"
+              className="bg-surface border border-outline-variant text-on-surface hover:bg-surface-container font-bold text-label-md px-lg py-3 rounded-lg flex items-center gap-xs transition-all shadow-sm cursor-pointer"
             >
               <Upload size={18} /> Importar Estudiantes (Excel)
             </button>
             <button 
               onClick={() => setShowCreateModal(true)}
-              className="bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary font-bold text-label-md px-lg py-3 rounded-lg flex items-center gap-xs transition-all shadow-sm"
+              className="bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary font-bold text-label-md px-lg py-3 rounded-lg flex items-center gap-xs transition-all shadow-sm cursor-pointer"
             >
               <Plus size={20} /> Crear Usuario
             </button>
@@ -1396,7 +1488,8 @@ export function UserManagement() {
                    <input 
                      type="checkbox" 
                      className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer accent-primary"
-                     checked={filteredUsers.length > 0 && selectedUserIds.size === filteredUsers.length}
+                      checked={isAllSelectableChecked}
+                      disabled={selectableUsers.length === 0}
                      onChange={(e) => handleSelectAll(e.target.checked)}
                    />
                  </th>
@@ -1425,12 +1518,15 @@ export function UserManagement() {
               ) : (
                 filteredUsers.map((user) => {
                   const roleUI = getRoleDisplay(user.role);
+                  const isCurrentUser = user.id === currentAdminId;
                   return (
                     <tr key={user.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
                       <td className="p-lg py-4 text-center select-none">
                         <input 
                           type="checkbox" 
-                          className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer accent-primary"
+                          disabled={isCurrentUser}
+                          className={`w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary accent-primary ${isCurrentUser ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                          title={isCurrentUser ? "No puedes seleccionar tu propia cuenta" : undefined}
                           checked={selectedUserIds.has(user.id)}
                           onChange={() => handleToggleSelectUser(user.id)}
                         />
@@ -1448,6 +1544,11 @@ export function UserManagement() {
                        <div className="font-bold flex items-center gap-1">
                          {user.full_name} 
                          {user.role === 'admin' && <ShieldCheck size={16} className="text-primary" />}
+                          {isCurrentUser && (
+                            <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-full font-semibold">
+                              Tú
+                            </span>
+                          )}
                        </div>
                      </div>
                    </div>
@@ -1495,13 +1596,22 @@ export function UserManagement() {
                           >
                             <Edit size={20} />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteUser(user.id, user.full_name)}
-                            className="text-on-surface-variant hover:text-error transition-colors p-1" 
-                            title="Eliminar Usuario"
-                          >
-                            <UserMinus size={20} />
-                          </button>
+                          {!isCurrentUser ? (
+                            <button 
+                              onClick={() => handleDeleteUser(user.id, user.full_name)}
+                              className="text-on-surface-variant hover:text-error transition-colors p-1" 
+                              title="Eliminar Usuario"
+                            >
+                              <UserMinus size={20} />
+                            </button>
+                          ) : (
+                            <span
+                              className="text-outline-variant p-1 cursor-not-allowed inline-flex items-center"
+                              title="No puedes eliminar tu propia cuenta"
+                            >
+                              <UserMinus size={20} className="opacity-30" />
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>

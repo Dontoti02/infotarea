@@ -31,6 +31,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'No se proporcionaron IDs' }, { status: 400 });
     }
 
+    // Regla de seguridad: Un administrador NUNCA puede eliminarse a sí mismo
+    const targetIds = ids.filter(id => id !== user.id);
+    if (targetIds.length === 0) {
+      return NextResponse.json({ error: 'No puedes eliminar tu propia cuenta de administrador actual.' }, { status: 400 });
+    }
+
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
       try {
@@ -38,11 +44,11 @@ export async function DELETE(request: Request) {
         const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres.vafrsmzqzgfuamrrtyob:dS3Kvv8GkhpStrGR@aws-0-us-east-1.pooler.supabase.com:6543/postgres';
         const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
         await client.connect();
-        const delRes = await client.query('DELETE FROM auth.users WHERE id = ANY($1::uuid[]) RETURNING id', [ids]);
+        const delRes = await client.query('DELETE FROM auth.users WHERE id = ANY($1::uuid[]) RETURNING id', [targetIds]);
         await client.end();
         return NextResponse.json({
           deleted: delRes.rowCount || 0,
-          failed: ids.length - (delRes.rowCount || 0),
+          failed: targetIds.length - (delRes.rowCount || 0),
         });
       } catch (dbErr: any) {
         return NextResponse.json({ error: 'Error al eliminar en base de datos: ' + dbErr.message }, { status: 500 });
@@ -57,7 +63,7 @@ export async function DELETE(request: Request) {
 
     // 3. Delete from auth.users (profiles cascade automatically)
     const results = await Promise.all(
-      ids.map(async (id) => {
+      targetIds.map(async (id) => {
         const { error } = await adminClient.auth.admin.deleteUser(id);
         return { id, success: !error, error: error?.message };
       })
