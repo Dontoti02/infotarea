@@ -243,3 +243,32 @@ El sistema implementa 4 tipos enumerados para garantizar la consistencia en el e
 4.  **`estado_entrega`**: Estado del flujo de evaluación:
     *   `pendiente`: Entregado por el alumno, esperando revisión.
     *   `revisado`: Calificado y retroalimentado por el docente.
+
+---
+
+## 💬 Entidades de Comunicación (Iteración Nº 3)
+
+### 8. `communication_messages` (HU-12 & HU-13)
+Gestión de hilos de chat y mensajería en tiempo real entre Docente-Estudiante y Administrador-Docente.
+*   **`id`** (`UUID`, Llave Primaria): Identificador único.
+*   **`sender_id`** (`UUID`, Llave Foránea): Referencia a `perfiles(id)`.
+*   **`receiver_id`** (`UUID`, Opcional): Referencia a `perfiles(id)` para mensajes directos.
+*   **`course_id`** (`UUID`, Opcional): Referencia a `cursos(id)` para contexto pedagógico.
+*   **`channel_type`** (`TEXT`): Tipo de canal (`teacher_student`, `admin_teacher`, `student_parent`).
+*   **`title`** (`TEXT`, Opcional): Título para circulares o comunicados.
+*   **`content`** (`TEXT`, Obligatorio): Texto del mensaje o circular.
+*   **`is_read`** (`BOOLEAN`, Por defecto `false`): Estado de lectura.
+*   **`created_at`** (`TIMESTAMPTZ`, Por defecto `NOW()`): Marca de tiempo del mensaje.
+
+### 9. `parent_student_links` (HU-14)
+Habilitación progresiva del flujo familiar Estudiante-Padre.
+*   **`id`** (`UUID`, Llave Primaria): Identificador único.
+*   **`student_id`** (`UUID`, Llave Foránea): Referencia a `perfiles(id)`.
+*   **`parent_name`** (`TEXT`): Nombre del apoderado o tutor legal.
+*   **`parent_email`** (`TEXT`): Correo de contacto del apoderado.
+*   **`parent_phone`** (`TEXT`): Teléfono o WhatsApp de contacto.
+*   **`invite_code`** (`TEXT`, Único): Clave familiar de vinculación (`PADRE-XXXX-2026`).
+*   **`progressive_stage`** (`INT`, [1, 3]): Fase actual (1: Vinculación, 2: Permisos de Avance, 3: Canal Activo).
+*   **`status`** (`TEXT`): Estado (`pending`, `linked`, `active`).
+*   **`share_grades`** / **`share_tasks`** (`BOOLEAN`): Alcance de visibilidad otorgado.
+

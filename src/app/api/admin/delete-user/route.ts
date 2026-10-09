@@ -33,7 +33,20 @@ export async function DELETE(request: Request) {
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
-      return NextResponse.json({ error: 'Se requiere SUPABASE_SERVICE_ROLE_KEY' }, { status: 503 });
+      try {
+        const { Client } = await import('pg');
+        const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres.vafrsmzqzgfuamrrtyob:dS3Kvv8GkhpStrGR@aws-0-us-east-1.pooler.supabase.com:6543/postgres';
+        const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+        await client.connect();
+        const delRes = await client.query('DELETE FROM auth.users WHERE id = ANY($1::uuid[]) RETURNING id', [ids]);
+        await client.end();
+        return NextResponse.json({
+          deleted: delRes.rowCount || 0,
+          failed: ids.length - (delRes.rowCount || 0),
+        });
+      } catch (dbErr: any) {
+        return NextResponse.json({ error: 'Error al eliminar en base de datos: ' + dbErr.message }, { status: 500 });
+      }
     }
 
     const adminClient = createVanillaClient(

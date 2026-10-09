@@ -12,11 +12,13 @@ import {
   ShieldCheck, 
   Bell, 
   Settings,
-  Archive
+  Archive,
+  MessageSquare
 } from "lucide-react";
 
 const adminMainNavItems: NavItem[] = [
   { label: "Panel de Control", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Comunicación", href: "/admin/comunicacion", icon: MessageSquare },
   { label: "Avisos", href: "/admin/avisos", icon: Megaphone },
   { label: "Cursos", href: "/admin/cursos", icon: School },
   { label: "Contenido", href: "/admin/contenido", icon: BookOpen },

@@ -22,26 +22,26 @@ export function RegisterForm() {
     setError(null);
 
     try {
-      // Register with metadata so the trigger sets the role correctly
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: 'admin', // Force admin role for this special registration
-          },
-        },
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          role: 'admin'
+        })
       });
 
-      if (authError) throw authError;
-
-      if (data.user) {
-        setSuccess(true);
-        setTimeout(() => {
-          router.push("/login");
-        }, 3000);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Error al registrar la cuenta");
       }
+
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/login");
+      }, 2500);
     } catch (err: any) {
       setError(err.message || "Error al crear la cuenta");
     } finally {

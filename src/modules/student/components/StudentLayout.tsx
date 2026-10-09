@@ -10,11 +10,13 @@ import {
   ClipboardList,
   BarChart3, 
   Bell, 
-  Settings 
+  Settings,
+  MessageSquare
 } from "lucide-react";
 
 const studentMainNavItems: NavItem[] = [
   { label: "Panel de Control", href: "/student/dashboard", icon: LayoutDashboard },
+  { label: "Comunicación", href: "/student/comunicacion", icon: MessageSquare },
   { label: "Centro de Avisos", href: "/student/avisos", icon: Megaphone },
   { label: "Mis Cursos", href: "/student/cursos", icon: School },
   { label: "Biblioteca", href: "/student/biblioteca", icon: BookOpen },
