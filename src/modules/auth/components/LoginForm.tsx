@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Mail, Lock, LogIn, Loader2, AlertCircle, School } from "lucide-react";
+import { Mail, Lock, LogIn, Loader2, AlertCircle, School, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import Link from "next/link";
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -129,14 +130,22 @@ export function LoginForm() {
               <Lock size={20} />
             </div>
             <input 
-              className="block w-full pl-12 pr-4 py-3.5 font-body-md text-body-md bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-on-surface placeholder:text-outline-variant outline-none transition-all shadow-sm" 
+              className="block w-full pl-12 pr-12 py-3.5 font-body-md text-body-md bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-on-surface placeholder:text-outline-variant outline-none transition-all shadow-sm" 
               id="password" 
               placeholder="••••••••" 
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-outline-variant hover:text-on-surface focus:outline-none transition-colors"
+              aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
         </div>
 

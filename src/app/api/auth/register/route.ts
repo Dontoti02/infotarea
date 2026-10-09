@@ -44,10 +44,14 @@ export async function POST(request: Request) {
           `INSERT INTO auth.users (
             instance_id, id, aud, role, email, encrypted_password, 
             email_confirmed_at, raw_app_meta_data, raw_user_meta_data, 
-            created_at, updated_at
+            created_at, updated_at,
+            confirmation_token, recovery_token, email_change_token_new,
+            email_change, email_change_token_current, phone_change,
+            phone_change_token, reauthentication_token, is_super_admin
           ) VALUES (
             '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 
-            $1, $2, NOW(), '{"provider":"email","providers":["email"]}', $3, NOW(), NOW()
+            $1, $2, NOW(), '{"provider":"email","providers":["email"]}', $3, NOW(), NOW(),
+            '', '', '', '', '', '', '', '', false
           ) RETURNING id, email`,
           [email, hashedPassword, JSON.stringify({ full_name: fullName, role })]
         );
