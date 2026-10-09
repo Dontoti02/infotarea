@@ -40,6 +40,7 @@ const ROLE_LABELS: Record<string, string> = {
   admin: "Administrador",
   teacher: "Docente",
   student: "Estudiante",
+  parent: "Padre de Familia",
 };
 
 export function DashboardLayout({ 

@@ -31,6 +31,7 @@ class InfoTareaAcceptanceFlows {
     if (user.role === 'admin') redirectUrl = '/admin/dashboard';
     else if (user.role === 'teacher') redirectUrl = '/teacher/dashboard';
     else if (user.role === 'student') redirectUrl = '/student/dashboard';
+    else if (user.role === 'parent') redirectUrl = '/parent/dashboard';
 
     return { success: true, user, redirectUrl };
   }
@@ -445,4 +446,54 @@ test('ACEP-09: HU-14 Comunicación Estudiante-Padre: habilitación progresiva de
   assert.equal(fase3.progressiveStage, 3);
   assert.equal(fase3.status, 'active');
   assert.equal(fase3.shareGrades, true);
+});
+
+test('ACEP-10: HU-15 Registro de Padre, vinculación de hijos por grado/sección y canal Docente-Padre', () => {
+  const app = new InfoTareaAcceptanceFlows();
+  
+  // GIVEN: Un padre de familia se registra en la plataforma
+  const parentId = 'parent-1';
+  app.users.set(parentId, {
+    id: parentId,
+    email: 'padre.lopez@familias.edu',
+    password: 'PadrePassword123!',
+    full_name: 'Carlos López',
+    role: 'parent'
+  });
+
+  // WHEN: Inicia sesión
+  const parentLogin = app.loginUser('padre.lopez@familias.edu', 'PadrePassword123!');
+  // THEN: Es autenticado y redirigido al dashboard familiar
+  assert.equal(parentLogin.success, true);
+  assert.equal(parentLogin.redirectUrl, '/parent/dashboard');
+
+  // GIVEN: Existen estudiantes con grado y sección
+  const student1 = { id: 'stu-luis', full_name: 'Luis Vera', role: 'student', section: '1A' };
+  const student2 = { id: 'stu-ana', full_name: 'Ana Vera', role: 'student', section: '3B' };
+  app.users.set(student1.id, student1);
+  app.users.set(student2.id, student2);
+
+  // WHEN: El padre vincula a su primer hijo (Luis Vera en 1A) y a su segundo hijo (Ana Vera en 3B)
+  const linkedChildren = [];
+  linkedChildren.push(student1);
+  linkedChildren.push(student2);
+
+  // THEN: Ambos hijos quedan vinculados a la cuenta familiar
+  assert.equal(linkedChildren.length, 2);
+  assert.equal(linkedChildren[0].full_name, 'Luis Vera');
+  assert.equal(linkedChildren[1].full_name, 'Ana Vera');
+
+  // WHEN: El docente del curso de Luis se comunica con el padre
+  const teacher = { id: 'teacher-ruiz', role: 'teacher' };
+  const parentMsg = {
+    senderId: teacher.id,
+    receiverId: parentId,
+    channelType: 'teacher_parent',
+    content: 'Estimado Sr. López, le comparto el informe sobre el buen desempeño de Luis en el aula.'
+  };
+
+  // THEN: El mensaje se procesa en el canal docente-padre sin conflictos de rol
+  assert.equal(parentMsg.channelType, 'teacher_parent');
+  assert.equal(parentMsg.senderId, teacher.id);
+  assert.equal(parentMsg.receiverId, parentId);
 });

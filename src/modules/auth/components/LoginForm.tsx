@@ -72,10 +72,26 @@ export function LoginForm() {
         admin: "/admin/dashboard",
         teacher: "/teacher/dashboard",
         student: "/student/dashboard",
+        parent: "/parent/dashboard",
       };
 
       if (!profile) {
         throw new Error("No se pudo encontrar el perfil de su cuenta.");
+      }
+
+      if (profile.role === "parent") {
+        // Check if parent has linked children
+        const { data: links } = await supabase
+          .from("parent_children")
+          .select("id")
+          .eq("parent_profile_id", data.user.id)
+          .limit(1);
+
+        if (!links || links.length === 0) {
+          router.push("/parent/onboarding");
+          router.refresh();
+          return;
+        }
       }
 
       router.push(roleRedirects[profile.role] || "/");
@@ -168,7 +184,7 @@ export function LoginForm() {
         <div className="pt-4">
           <button 
             disabled={loading}
-            className="w-full flex justify-center items-center gap-3 py-4 px-6 border border-transparent rounded-xl shadow-xl font-bold font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100" 
+            className="w-full flex justify-center items-center gap-3 py-4 px-6 border border-transparent rounded-xl shadow-xl font-bold font-label-md text-label-md text-on-primary bg-primary-container hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 cursor-pointer" 
             type="submit"
           >
             {loading ? <Loader2 className="animate-spin" size={22} /> : <LogIn size={22} />}
@@ -177,7 +193,22 @@ export function LoginForm() {
         </div>
       </form>
 
-      <div className="mt-12 text-center border-t border-outline-variant/30 pt-6">
+      {/* Opción para Padres de Familia */}
+      <div className="mt-6 pt-5 border-t border-outline-variant/40 text-center">
+        <div className="bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-2xl p-3.5 transition-colors">
+          <p className="text-sm text-on-surface font-medium">
+            ¿Eres padre de familia?{" "}
+            <Link 
+              href="/registro-padre" 
+              className="text-primary hover:text-primary-container font-bold underline underline-offset-4 inline-flex items-center gap-1 transition-colors"
+            >
+              Regístrate aquí
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 text-center border-t border-outline-variant/30 pt-4">
         <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-[0.2em] font-bold">
           © 2026 InfoTarea
         </p>

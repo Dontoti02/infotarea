@@ -202,11 +202,11 @@ export function formatRelativeTime(dateStr: string, currentNow = new Date()): st
 
 export interface ChatMessageInput {
   senderId: string;
-  senderRole: 'teacher' | 'student' | 'admin';
+  senderRole: 'teacher' | 'student' | 'admin' | 'parent';
   receiverId?: string;
-  receiverRole?: 'teacher' | 'student' | 'admin';
+  receiverRole?: 'teacher' | 'student' | 'admin' | 'parent';
   courseId?: string;
-  channelType: 'teacher_student' | 'admin_teacher' | 'student_parent';
+  channelType: 'teacher_student' | 'admin_teacher' | 'student_parent' | 'teacher_parent';
   content: string;
 }
 
@@ -246,7 +246,7 @@ export function validateChatMessage(input: Partial<ChatMessageInput>): { valid: 
     errors.push('El mensaje excede el límite máximo de 2000 caracteres.');
   }
 
-  const validChannels = ['teacher_student', 'admin_teacher', 'student_parent'];
+  const validChannels = ['teacher_student', 'admin_teacher', 'student_parent', 'teacher_parent'];
   if (!input.channelType || !validChannels.includes(input.channelType)) {
     errors.push('El canal de comunicación no es válido.');
   }
