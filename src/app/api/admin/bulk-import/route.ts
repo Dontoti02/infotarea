@@ -39,14 +39,146 @@ export async function POST(request: Request) {
 
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    // Fallback a conexión directa PostgreSQL cuando SUPABASE_SERVICE_ROLE_KEY no está configurada
     if (!serviceRoleKey) {
-      return NextResponse.json(
-        { error: 'Se requiere SUPABASE_SERVICE_ROLE_KEY en .env.local para la importación masiva.' },
-        { status: 503 }
-      );
+      const { Client } = await import('pg');
+      const bcrypt = await import('bcrypt');
+      const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres.vafrsmzqzgfuamrrtyob:dS3Kvv8GkhpStrGR@aws-0-us-east-1.pooler.supabase.com:6543/postgres';
+      const pgClient = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+      await pgClient.connect();
+
+      try {
+        // Pre-cargar cursos existentes agrupados por sección
+        const coursesRes = await pgClient.query('SELECT id, section FROM public.courses');
+        const courseBySection = new Map<string, string>(
+          coursesRes.rows.map((c: any) => [c.section as string, c.id as string])
+        );
+
+        const ensureCourse = async (section: string): Promise<string | null> => {
+          const existing = courseBySection.get(section);
+          if (existing) return existing;
+
+          const ins = await pgClient.query(
+            'INSERT INTO public.courses (name, section) VALUES ($1, $2) RETURNING id',
+            [`Aula ${section}`, section]
+          );
+          if (ins.rows.length > 0) {
+            const newId = ins.rows[0].id;
+            courseBySection.set(section, newId);
+            return newId;
+          }
+          return null;
+        };
+
+        const results = [];
+        for (const student of students) {
+          try {
+            const trimmedEmail = student.email.trim().toLowerCase();
+            const trimmedName = student.fullName.trim();
+            const trimmedSection = (student.section || '').trim().toUpperCase();
+
+            // Verificar si el usuario ya existe en auth.users
+            const userCheck = await pgClient.query(
+              'SELECT id FROM auth.users WHERE LOWER(email) = $1 LIMIT 1',
+              [trimmedEmail]
+            );
+
+            let userId: string;
+            let isReactivation = false;
+            const hashedPassword = await bcrypt.hash(student.password, 10);
+
+            if (userCheck.rows.length > 0) {
+              userId = userCheck.rows[0].id;
+              isReactivation = true;
+              await pgClient.query(
+                `UPDATE auth.users 
+                 SET encrypted_password = $1, 
+                     raw_user_meta_data = $2, 
+                     updated_at = NOW() 
+                 WHERE id = $3`,
+                [hashedPassword, JSON.stringify({ full_name: trimmedName, role: 'student' }), userId]
+              );
+            } else {
+              const insertUser = await pgClient.query(
+                `INSERT INTO auth.users (
+                  instance_id, id, aud, role, email, encrypted_password, 
+                  email_confirmed_at, raw_app_meta_data, raw_user_meta_data, 
+                  created_at, updated_at,
+                  confirmation_token, recovery_token, email_change_token_new,
+                  email_change, email_change_token_current, phone_change,
+                  phone_change_token, reauthentication_token, is_super_admin
+                ) VALUES (
+                  '00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated', 
+                  $1, $2, NOW(), '{"provider":"email","providers":["email"]}', $3, NOW(), NOW(),
+                  '', '', '', '', '', '', '', '', false
+                ) RETURNING id`,
+                [trimmedEmail, hashedPassword, JSON.stringify({ full_name: trimmedName, role: 'student' })]
+              );
+              userId = insertUser.rows[0].id;
+
+              await pgClient.query(
+                `INSERT INTO auth.identities (
+                  id, user_id, identity_data, provider, provider_id, 
+                  last_sign_in_at, created_at, updated_at
+                ) VALUES (
+                  gen_random_uuid(), $1::uuid, $2::jsonb, 'email', $1::text, 
+                  NOW(), NOW(), NOW()
+                )
+                ON CONFLICT (provider_id, provider) DO UPDATE 
+                SET identity_data = EXCLUDED.identity_data, updated_at = NOW()`,
+                [
+                  userId,
+                  JSON.stringify({ sub: userId, email: trimmedEmail, email_verified: true, phone_verified: false })
+                ]
+              );
+            }
+
+            // Asegurar perfil en public.profiles
+            await pgClient.query(
+              `INSERT INTO public.profiles (id, full_name, role)
+               VALUES ($1, $2, 'student')
+               ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name, role = 'student'`,
+              [userId, trimmedName]
+            );
+
+            // Guardar credenciales temporales
+            await pgClient.query(
+              `INSERT INTO public.temp_credentials (profile_id, email, temp_password)
+               VALUES ($1, $2, $3)
+               ON CONFLICT (profile_id) DO UPDATE 
+               SET email = EXCLUDED.email, temp_password = EXCLUDED.temp_password`,
+              [userId, trimmedEmail, student.password]
+            );
+
+            // Matricular en curso/sección
+            if (trimmedSection) {
+              const courseId = await ensureCourse(trimmedSection);
+              if (courseId) {
+                await pgClient.query(
+                  `INSERT INTO public.course_members (course_id, profile_id)
+                   VALUES ($1, $2)
+                   ON CONFLICT (course_id, profile_id) DO NOTHING`,
+                  [courseId, userId]
+                );
+              }
+            }
+
+            results.push({ ...student, status: 'success', reactivated: isReactivation });
+          } catch (stErr: any) {
+            results.push({ ...student, status: 'error', errorMessage: stErr.message ?? 'Error inesperado' });
+          }
+        }
+
+        const successCount = results.filter((r) => r.status === 'success').length;
+        const errorCount = results.filter((r) => r.status === 'error').length;
+
+        return NextResponse.json({ results, successCount, errorCount });
+      } finally {
+        await pgClient.end();
+      }
     }
 
-    // 3. Build admin client (bypasses ALL rate limits + RLS)
+    // 3. Build admin client (bypasses ALL rate limits + RLS cuando serviceRoleKey está presente)
     const adminClient = createVanillaClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vafrsmzqzgfuamrrtyob.supabase.co',
       serviceRoleKey,
