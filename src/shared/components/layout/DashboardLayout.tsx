@@ -101,6 +101,29 @@ export function DashboardLayout({
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Global presence tracking
+  useEffect(() => {
+    const channel = supabase.channel('system_online_users');
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        channel
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await channel.track({
+                user_id: user.id,
+                online_at: new Date().toISOString(),
+              });
+            }
+          });
+      }
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();

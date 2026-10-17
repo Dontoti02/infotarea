@@ -35,12 +35,37 @@ export function AdminTeacherMessaging({
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Lista de docentes para el Administrador
+  const [allTeachersList, setAllTeachersList] = useState<{ id: string; name: string; area: string; unread: number }[]>([]);
   const [teachersList, setTeachersList] = useState<{ id: string; name: string; area: string; unread: number }[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<{ id: string; name: string; area: string; unread: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
   const [newDirectText, setNewDirectText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const channel = supabase.channel('system_online_users');
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineIds = new Set<string>();
+        for (const key in state) {
+          state[key].forEach((presence: any) => {
+            if (presence.user_id) {
+              onlineIds.add(presence.user_id);
+            }
+          });
+        }
+        setOnlineUsers(onlineIds);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   // Carga inicial de docentes desde profiles
   useEffect(() => {
@@ -60,8 +85,7 @@ export function AdminTeacherMessaging({
           area: "Plana Docente",
           unread: 0
         }));
-        setTeachersList(tList);
-        setSelectedTeacher(tList[0]);
+        setAllTeachersList(tList);
       } else {
         const defaultTeacher = { 
           id: "3c47941b-6528-4115-8296-6f23c7b33fd9", 
@@ -69,13 +93,30 @@ export function AdminTeacherMessaging({
           area: "Matemática", 
           unread: 0 
         };
-        setTeachersList([defaultTeacher]);
-        setSelectedTeacher(defaultTeacher);
+        setAllTeachersList([defaultTeacher]);
       }
     }
 
     loadTeachers();
   }, [supabase]);
+
+  // Actualizar lista filtrada según onlineUsers
+  useEffect(() => {
+    if (userRole === "admin") {
+      const filtered = allTeachersList.filter(t => onlineUsers.has(t.id));
+      setTeachersList(filtered);
+      if (filtered.length > 0 && (!selectedTeacher || !filtered.find(t => t.id === selectedTeacher.id))) {
+        setSelectedTeacher(filtered[0]);
+      } else if (filtered.length === 0) {
+        setSelectedTeacher(null);
+      }
+    } else {
+      setTeachersList(allTeachersList);
+      if (allTeachersList.length > 0 && !selectedTeacher) {
+        setSelectedTeacher(allTeachersList[0]);
+      }
+    }
+  }, [allTeachersList, onlineUsers, userRole]); // omit selectedTeacher from deps to avoid loop
 
   // Cargar mensajes directos de Supabase
   useEffect(() => {
