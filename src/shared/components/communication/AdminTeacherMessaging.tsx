@@ -35,6 +35,7 @@ export function AdminTeacherMessaging({
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Lista de docentes para el Administrador
+  const [allTeachersList, setAllTeachersList] = useState<{ id: string; name: string; area: string; unread: number }[]>([]);
   const [teachersList, setTeachersList] = useState<{ id: string; name: string; area: string; unread: number }[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<{ id: string; name: string; area: string; unread: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,17 +78,14 @@ export function AdminTeacherMessaging({
         .select("id, full_name, email, role")
         .eq("role", "teacher");
 
-      const onlineTeachers = (dbTeachers || []).filter(t => onlineUsers.has(t.id));
-
-      if (onlineTeachers.length > 0) {
-        const tList = onlineTeachers.map((t) => ({
+      if (dbTeachers && dbTeachers.length > 0) {
+        const tList = dbTeachers.map((t) => ({
           id: t.id,
           name: t.full_name || "Docente",
           area: "Plana Docente",
           unread: 0
         }));
-        setTeachersList(tList);
-        setSelectedTeacher(tList[0]);
+        setAllTeachersList(tList);
       } else {
         const defaultTeacher = { 
           id: "3c47941b-6528-4115-8296-6f23c7b33fd9", 
@@ -95,13 +93,30 @@ export function AdminTeacherMessaging({
           area: "Matemática", 
           unread: 0 
         };
-        setTeachersList([defaultTeacher]);
-        setSelectedTeacher(defaultTeacher);
+        setAllTeachersList([defaultTeacher]);
       }
     }
 
     loadTeachers();
-  }, [supabase, onlineUsers]);
+  }, [supabase]);
+
+  // Actualizar lista filtrada según onlineUsers
+  useEffect(() => {
+    if (userRole === "admin") {
+      const filtered = allTeachersList.filter(t => onlineUsers.has(t.id));
+      setTeachersList(filtered);
+      if (filtered.length > 0 && (!selectedTeacher || !filtered.find(t => t.id === selectedTeacher.id))) {
+        setSelectedTeacher(filtered[0]);
+      } else if (filtered.length === 0) {
+        setSelectedTeacher(null);
+      }
+    } else {
+      setTeachersList(allTeachersList);
+      if (allTeachersList.length > 0 && !selectedTeacher) {
+        setSelectedTeacher(allTeachersList[0]);
+      }
+    }
+  }, [allTeachersList, onlineUsers, userRole]); // omit selectedTeacher from deps to avoid loop
 
   // Cargar mensajes directos de Supabase
   useEffect(() => {
