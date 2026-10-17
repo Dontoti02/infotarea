@@ -128,7 +128,9 @@ export async function GET(request: Request) {
     // 5. Build rich children objects
     const children = (profiles || []).map((prof: any) => {
       const verificationPending = !verifiedIds.has(prof.id);
-      const academic = childAcademicInfo(verificationPending ? { course_members: [] } : prof);
+      // El aula (grado, sección y cursos) se muestra en cuanto existe el vínculo.
+      // Calificaciones, tareas y docentes siguen reservados a vínculos verificados.
+      const academic = childAcademicInfo(prof);
       const { courses, section, teachers } = academic;
 
       const studentSubs = (submissions || []).filter((s: any) => s.student_id === prof.id);
@@ -156,10 +158,10 @@ export async function GET(request: Request) {
         avatar_url: prof.avatar_url,
         section,
         courses,
-        teachers,
+        teachers: verificationPending ? [] : teachers,
         grade: academic.grade,
         classrooms: academic.classrooms,
-        classroomLabel: !verificationAvailable ? "Verificación familiar pendiente de activación" : verificationPending ? "Vínculo pendiente de verificación" : academic.classroomLabel,
+        classroomLabel: academic.classroomLabel,
         verificationPending,
         stats: {
           averageScore,

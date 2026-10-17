@@ -32,6 +32,7 @@ interface ChildData {
   section: string | null;
   grade: string | null;
   classroomLabel: string;
+  classrooms?: Array<{ grade: string | null; section: string | null; label: string }>;
   verificationPending?: boolean;
   courses: Array<{
     id: string;
@@ -165,6 +166,7 @@ export default function ParentDashboardPage() {
   }
 
   const activeChild = children[selectedChildIndex] || children[0];
+  const activeClassrooms = activeChild.classrooms ?? [];
 
   return (
     <ParentLayout>
@@ -229,8 +231,41 @@ export default function ParentDashboardPage() {
             <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface">
               {activeChild.full_name}
             </h1>
+            {/* Grado, sección y cursos del estudiante */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {activeClassrooms.length > 0 ? (
+                <>
+                  {activeClassrooms.map((classroom, index) => (
+                    <span
+                      key={`classroom-${index}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 text-primary text-xs font-bold"
+                    >
+                      <GraduationCap size={14} />
+                      <span>
+                        {classroom.grade ? `Grado ${classroom.grade}°` : "Grado no asignado"}
+                        {classroom.section ? ` · Sección ${classroom.section}` : ""}
+                      </span>
+                    </span>
+                  ))}
+                  {activeChild.courses.map((course) => (
+                    <span
+                      key={course.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-bold"
+                    >
+                      <BookOpen size={14} />
+                      <span>{course.name}</span>
+                    </span>
+                  ))}
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-bold">
+                  <GraduationCap size={14} />
+                  <span>Sin aula asignada</span>
+                </span>
+              )}
+            </div>
             <p className="text-sm text-on-surface-variant">
-              <strong className="text-on-surface">{activeChild.classroomLabel}</strong> • {activeChild.courses.length} curso(s) activos
+              {activeChild.courses.length} curso(s) activos
             </p>
             {activeChild.email && <p className="text-sm text-on-surface-variant">Correo: {activeChild.email}</p>}
           </div>

@@ -18,6 +18,8 @@ import {
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { translateErrorMessage } from "@/shared/utils/error-translator";
+import { ParentLayout } from "@/modules/parent/components/ParentLayout";
+import { describeClassroom } from "@/shared/utils/communication";
 
 interface StudentResult {
   id: string;
@@ -25,6 +27,7 @@ interface StudentResult {
   email?: string;
   section: string;
   course_name: string;
+  courses?: Array<{ id: string; name: string; section: string | null }>;
   courses_count: number;
   detectedGrade?: string;
 }
@@ -33,6 +36,9 @@ interface LinkedChild {
   id: string;
   full_name: string;
   section: string;
+  grade?: string | null;
+  classroomLabel?: string;
+  courseNames?: string[];
   courses_count: number;
 }
 
@@ -67,6 +73,9 @@ export default function ParentOnboardingPage() {
               id: c.id,
               full_name: c.full_name,
               section: c.section,
+              grade: c.grade,
+              classroomLabel: c.classroomLabel,
+              courseNames: (c.courses ?? []).map((course: { name: string }) => course.name),
               courses_count: c.courses?.length || 0,
             }))
           );
@@ -131,6 +140,9 @@ export default function ParentOnboardingPage() {
             id: student.id,
             full_name: student.full_name,
             section: student.section,
+            grade: student.detectedGrade ?? describeClassroom(student.section).grade,
+            classroomLabel: describeClassroom(student.section).label,
+            courseNames: (student.courses ?? []).map((course) => course.name),
             courses_count: student.courses_count,
           },
         ]);
@@ -175,8 +187,8 @@ export default function ParentOnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <ParentLayout>
+      <div className="max-w-4xl mx-auto space-y-8 pb-12">
         {/* Header */}
         <div className="bg-surface-container-lowest rounded-3xl p-6 md:p-8 shadow-sm border border-outline-variant/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -334,10 +346,10 @@ export default function ParentOnboardingPage() {
                             </h4>
                             <div className="flex items-center gap-2 mt-0.5 text-xs text-on-surface-variant">
                               <span className="font-semibold text-primary">
-                                Sección: {student.section}
+                                {describeClassroom(student.section).label}
                               </span>
                               <span>•</span>
-                              <span>{student.course_name}</span>
+                              <span className="truncate">{student.course_name}</span>
                             </div>
                           </div>
                         </div>
@@ -423,8 +435,19 @@ export default function ParentOnboardingPage() {
                           </span>
                         </div>
                         <p className="text-xs text-on-surface-variant mt-0.5">
-                          Sección: <span className="font-semibold text-on-surface">{child.section}</span>
+                          <span className="font-semibold text-on-surface">
+                            {child.classroomLabel || describeClassroom(child.section).label}
+                          </span>
+                          {child.courses_count > 0 && <span> • {child.courses_count} curso(s)</span>}
                         </p>
+                        {child.courseNames && child.courseNames.length > 0 && (
+                          <p
+                            className="text-[11px] text-on-surface-variant mt-0.5 truncate"
+                            title={child.courseNames.join(", ")}
+                          >
+                            Cursos: {child.courseNames.join(", ")}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -473,6 +496,6 @@ export default function ParentOnboardingPage() {
           </div>
         </div>
       </div>
-    </div>
+    </ParentLayout>
   );
 }
