@@ -128,8 +128,8 @@ export async function GET(request: Request) {
     // 5. Build rich children objects
     const children = (profiles || []).map((prof: any) => {
       const verificationPending = !verifiedIds.has(prof.id);
-      // El aula (grado, sección y cursos) se muestra en cuanto existe el vínculo.
-      // Calificaciones, tareas y docentes siguen reservados a vínculos verificados.
+      // El aula (grado, sección y cursos) y los docentes se muestran en cuanto existe el vínculo.
+      // Calificaciones y tareas siguen reservadas a vínculos verificados.
       const academic = childAcademicInfo(prof);
       const { courses, section, teachers } = academic;
 
@@ -158,7 +158,7 @@ export async function GET(request: Request) {
         avatar_url: prof.avatar_url,
         section,
         courses,
-        teachers: verificationPending ? [] : teachers,
+        teachers,
         grade: academic.grade,
         classrooms: academic.classrooms,
         classroomLabel: academic.classroomLabel,

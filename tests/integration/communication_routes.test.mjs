@@ -215,7 +215,7 @@ function familyClientFor({ schemaReady = false, verifiedAt = null, linkError = n
   return client;
 }
 
-test('el panel familiar muestra el aula del vínculo aunque verified_at aún no exista, sin docentes', async () => {
+test('el panel familiar muestra el aula y los docentes del vínculo aunque verified_at aún no exista', async () => {
   for (const missingCode of ['42703', 'PGRST204']) {
     const client = familyClientFor({ missingCode });
     const handlers = loadModule('../../src/app/api/parents/children/route.ts', client);
@@ -230,7 +230,7 @@ test('el panel familiar muestra el aula del vínculo aunque verified_at aún no 
     assert.equal(data.children[0].classroomLabel, 'Grado 2 · Sección B');
     assert.equal(data.children[0].courses.length, 1);
     assert.equal(data.children[0].courses[0].name, 'Matemática');
-    assert.deepEqual(data.children[0].teachers, []);
+    assert.equal(data.children[0].teachers[0].full_name, 'Docente');
     assert.match(data.notice, /activar/i);
     assert.equal(client.calls.filter(call => call.table === 'parent_children').length, 2);
     assert.equal(client.calls.some(call => call.table === 'submissions' || call.table === 'tasks'), false);

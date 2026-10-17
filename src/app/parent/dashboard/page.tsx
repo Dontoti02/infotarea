@@ -171,7 +171,7 @@ export default function ParentDashboardPage() {
   return (
     <ParentLayout>
       <div className="space-y-6 pb-12">
-        {(familyNotice || activeChild.verificationPending) && <p role="status" className="rounded-2xl p-4 bg-amber-50 text-amber-900">{familyNotice || "El colegio debe verificar el vínculo con este estudiante antes de mostrar sus datos académicos y docentes."}</p>}
+        {(familyNotice || activeChild.verificationPending) && <p role="status" className="rounded-2xl p-4 bg-amber-50 text-amber-900">{familyNotice || "El colegio debe verificar el vínculo con este estudiante antes de mostrar sus calificaciones y tareas."}</p>}
         {/* Child Selector Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/20 shadow-xs">
           <div className="flex flex-wrap items-center gap-2">

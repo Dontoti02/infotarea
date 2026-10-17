@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Building2, Loader2, Heart, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { describeClassroom, queryFamilyLinks, FAMILY_VERIFICATION_NOTICE } from "@/shared/utils/communication";
+import { describeClassroom } from "@/shared/utils/communication";
 import { ChatView, type ChatContact } from "./ChatView";
 
 type UserRole = "teacher" | "student" | "admin" | "parent";
@@ -112,16 +112,7 @@ export function CommunicationHub({ userRole, userId, userName = "Usuario" }: Com
               result = [...students.values()].map(student => ({ id: student.id, name: student.name, subtitle: `Estudiante · ${[...student.details].join(" / ")}` }));
             } else if (members.length) {
               const studentIds = [...new Set(members.map(member => member.profile_id))];
-              const family = await queryFamilyLinks<LinkedParent[]>(includeVerification => {
-                const query = supabase.from("parent_children");
-                return (includeVerification
-                  ? query.select("student_profile_id,parent:parent_profile_id(id,full_name,role),student:student_profile_id(id,full_name,role)").in("student_profile_id", studentIds).not("verified_at", "is", null)
-                  : query.select("student_profile_id,parent:parent_profile_id(id,full_name,role),student:student_profile_id(id,full_name,role)").in("student_profile_id", studentIds)
-                ).abortSignal(controller.signal) as unknown as PromiseLike<{ data: LinkedParent[] | null; error: { code?: string; message: string } | null }>;
-              });
-              if (family.error) throw new Error(family.error.message);
-              if (!family.verificationAvailable && alive) setFamilyNotice(FAMILY_VERIFICATION_NOTICE);
-              const rows = family.verificationAvailable ? family.data : [];
+              const rows = await checked(supabase.from("parent_children").select("student_profile_id,parent:parent_profile_id(id,full_name,role),student:student_profile_id(id,full_name,role)").in("student_profile_id", studentIds).abortSignal(controller.signal));
               const parents = new Map<string, ChatContact & { details: Set<string> }>();
               for (const link of (rows || []) as unknown as LinkedParent[]) {
                 const parent = relation(link.parent);
@@ -157,7 +148,7 @@ export function CommunicationHub({ userRole, userId, userName = "Usuario" }: Com
     })}</div>}
     {userRole === "parent" && children.length > 0 && <div className="grid gap-3 md:grid-cols-2">{children.map(child => <article key={child.id} className="rounded-2xl border border-outline-variant/30 bg-white p-4 space-y-1">
       <p className="text-xs font-semibold text-primary">Estudiante vinculado</p><h2 className="font-bold">{child.full_name}</h2><p className="text-sm">{child.classroomLabel}</p>{child.email && <p className="text-xs text-on-surface-variant">{child.email}</p>}
-      {activeTab === "teacher_parent" && (child.verificationPending ? <p className="text-sm text-amber-800">Solicita al colegio verificar este vínculo para consultar sus datos académicos y docentes.</p> : child.teachers.length ? <ul className="text-sm space-y-1 pt-2">{child.teachers.map((teacher, index) => <li key={`${teacher.id}:${index}`}><span className="font-semibold">{teacher.full_name}</span> · {teacher.courseName} · {teacher.classroomLabel}</li>)}</ul> : <p className="text-sm text-on-surface-variant">Sin docente asignado a sus cursos.</p>)}
+      {activeTab === "teacher_parent" && <>{child.teachers.length ? <ul className="text-sm space-y-1 pt-2">{child.teachers.map((teacher, index) => <li key={`${teacher.id}:${index}`}><span className="font-semibold">{teacher.full_name}</span> · {teacher.courseName} · {teacher.classroomLabel}</li>)}</ul> : <p className="text-sm text-on-surface-variant">Sin docente asignado a sus cursos.</p>}{child.verificationPending && <p className="text-sm text-amber-800">Solicita al colegio verificar este vínculo para consultar sus calificaciones y tareas.</p>}</>}
     </article>)}</div>}
     {error ? <div role="alert" className="p-5 rounded-2xl border border-red-200 bg-red-50 text-red-800">No se pudieron cargar los contactos: {error}</div> : loading ? <div className="flex items-center justify-center h-72 bg-white rounded-2xl border"><Loader2 className="animate-spin mr-2" />Cargando contactos...</div> : <ChatView key={`${userId}:${activeTab}`} channelType={activeTab} myId={userId} myName={userName} myRole={userRole} contacts={contacts} accentColor={tabInfo[activeTab].color} emptyPlaceholder={activeTab === "student_parent" ? (userRole === "parent" ? "No tienes hijos vinculados a tu cuenta" : "No tienes familiares vinculados a tu cuenta") : "No hay contactos académicos vinculados"} />}
   </div>;
