@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const parentMainNavItems: NavItem[] = [
   { label: "Panel Familiar", href: "/parent/dashboard", icon: LayoutDashboard },
-  { label: "Comunicación Docente", href: "/parent/comunicacion", icon: MessageSquare },
+  { label: "Comunicación", href: "/parent/comunicacion", icon: MessageSquare },
   { label: "Mis Hijos", href: "/parent/onboarding", icon: Users },
 ];
 

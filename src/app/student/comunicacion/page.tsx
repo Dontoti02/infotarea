@@ -25,7 +25,7 @@ export default async function StudentCommunicationPage() {
       <div className="space-y-2 mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Comunicación</h1>
         <p className="text-sm text-on-surface-variant">
-          Chat directo con los docentes asignados a tus cursos
+          Chat directo con los docentes asignados a tus cursos y con tu familia
         </p>
       </div>
       <CommunicationHub 

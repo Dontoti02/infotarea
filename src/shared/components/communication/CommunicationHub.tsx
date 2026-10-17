@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Building2, Loader2, Heart } from "lucide-react";
+import { MessageSquare, Building2, Loader2, Heart, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { describeClassroom, queryFamilyLinks, FAMILY_VERIFICATION_NOTICE } from "@/shared/utils/communication";
 import { ChatView, type ChatContact } from "./ChatView";
 
 type UserRole = "teacher" | "student" | "admin" | "parent";
-type TabId = "teacher_student" | "admin_teacher" | "teacher_parent";
+type TabId = "teacher_student" | "admin_teacher" | "teacher_parent" | "student_parent";
 interface CommunicationHubProps { userRole: UserRole; userId: string; userName?: string }
 interface Profile { id: string; full_name: string | null; role?: string }
 interface Course { id: string; name: string; section: string | null; teacher_id?: string | null }
@@ -26,12 +26,13 @@ async function checked<T>(request: PromiseLike<{ data: T | null; error: { messag
 }
 const roleTabs: Record<UserRole, TabId[]> = {
   admin: ["admin_teacher"], teacher: ["teacher_student", "admin_teacher", "teacher_parent"],
-  student: ["teacher_student"], parent: ["teacher_parent"],
+  student: ["teacher_student", "student_parent"], parent: ["teacher_parent", "student_parent"],
 };
 const tabInfo: Record<TabId, { icon: React.ElementType; color: string }> = {
   teacher_student: { icon: MessageSquare, color: "teal" },
   admin_teacher: { icon: Building2, color: "amber" },
   teacher_parent: { icon: Heart, color: "violet" },
+  student_parent: { icon: Users, color: "emerald" },
 };
 
 export function CommunicationHub({ userRole, userId, userName = "Usuario" }: CommunicationHubProps) {
@@ -66,24 +67,33 @@ export function CommunicationHub({ userRole, userId, userName = "Usuario" }: Com
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || "No se pudo consultar la ficha de tus hijos");
           const linkedChildren: ChildSummary[] = data.children;
-          if (alive) setFamilyNotice(data.notice || "");
-          const teachers = new Map<string, ChatContact & { details: Set<string> }>();
-          for (const child of linkedChildren) {
-            for (const teacher of child.teachers) {
-              const entry = teachers.get(teacher.id) || { id: teacher.id, name: teacher.full_name || "Docente", details: new Set<string>() };
-              entry.details.add(`${child.full_name} · ${teacher.courseName} · ${teacher.classroomLabel}`);
-              teachers.set(teacher.id, entry);
-            }
-          }
-          result = [...teachers.values()].map(teacher => ({ id: teacher.id, name: teacher.name, subtitle: [...teacher.details].join(" / ") }));
           if (alive) setChildren(linkedChildren);
+          if (activeTab === "student_parent") {
+            result = linkedChildren.map(child => ({ id: child.id, name: child.full_name, subtitle: `Estudiante · ${child.classroomLabel}` }));
+          } else {
+            if (alive) setFamilyNotice(data.notice || "");
+            const teachers = new Map<string, ChatContact & { details: Set<string> }>();
+            for (const child of linkedChildren) {
+              for (const teacher of child.teachers) {
+                const entry = teachers.get(teacher.id) || { id: teacher.id, name: teacher.full_name || "Docente", details: new Set<string>() };
+                entry.details.add(`${child.full_name} · ${teacher.courseName} · ${teacher.classroomLabel}`);
+                teachers.set(teacher.id, entry);
+              }
+            }
+            result = [...teachers.values()].map(teacher => ({ id: teacher.id, name: teacher.name, subtitle: [...teacher.details].join(" / ") }));
+          }
         } else if (userRole === "student") {
-          const rows = await checked(supabase.from("course_members").select("course_id,courses:course_id(id,name,section,teacher_id)").eq("profile_id", userId).abortSignal(controller.signal));
-          const courses = ((rows || []) as unknown as Member[]).map(row => relation(row.courses)).filter((course): course is Course => Boolean(course));
-          const teacherIds = [...new Set(courses.flatMap(course => course.teacher_id ? [course.teacher_id] : []))];
-          if (teacherIds.length) {
-            const teachers = await checked(supabase.from("profiles").select("id,full_name").eq("role", "teacher").in("id", teacherIds).abortSignal(controller.signal));
-            result = (teachers || []).map(teacher => ({ id: teacher.id, name: teacher.full_name || "Docente", subtitle: courses.filter(course => course.teacher_id === teacher.id).map(course => `${course.name} · ${describeClassroom(course.section).label}`).join(" / ") }));
+          if (activeTab === "student_parent") {
+            const links = (await checked(supabase.from("parent_children").select("parent:parent_profile_id(id,full_name,role)").eq("student_profile_id", userId).abortSignal(controller.signal))) as unknown as { parent: Profile | Profile[] | null }[] | null;
+            result = (links || []).map(link => relation(link.parent)).filter((parent): parent is Profile => Boolean(parent && parent.role === "parent")).map(parent => ({ id: parent.id, name: parent.full_name || "Apoderado", subtitle: "Apoderado" }));
+          } else {
+            const rows = await checked(supabase.from("course_members").select("course_id,courses:course_id(id,name,section,teacher_id)").eq("profile_id", userId).abortSignal(controller.signal));
+            const courses = ((rows || []) as unknown as Member[]).map(row => relation(row.courses)).filter((course): course is Course => Boolean(course));
+            const teacherIds = [...new Set(courses.flatMap(course => course.teacher_id ? [course.teacher_id] : []))];
+            if (teacherIds.length) {
+              const teachers = await checked(supabase.from("profiles").select("id,full_name").eq("role", "teacher").in("id", teacherIds).abortSignal(controller.signal));
+              result = (teachers || []).map(teacher => ({ id: teacher.id, name: teacher.full_name || "Docente", subtitle: courses.filter(course => course.teacher_id === teacher.id).map(course => `${course.name} · ${describeClassroom(course.section).label}`).join(" / ") }));
+            }
           }
         } else if (userRole === "teacher") {
           const courses = await checked(supabase.from("courses").select("id,name,section").eq("teacher_id", userId).abortSignal(controller.signal));
@@ -138,7 +148,7 @@ export function CommunicationHub({ userRole, userId, userName = "Usuario" }: Com
     return () => { alive = false; window.clearTimeout(deadline); controller.abort(); };
   }, [activeTab, userRole, userId, supabase]);
 
-  const label = (id: TabId) => id === "teacher_student" ? (userRole === "teacher" ? "Alumnos" : "Mis docentes") : id === "teacher_parent" ? (userRole === "parent" ? "Docentes de mis hijos" : "Padres / Apoderados") : userRole === "admin" ? "Docentes" : "Dirección";
+  const label = (id: TabId) => id === "student_parent" ? (userRole === "parent" ? "Mis hijos" : "Mi familia") : id === "teacher_student" ? (userRole === "teacher" ? "Alumnos" : "Mis docentes") : id === "teacher_parent" ? (userRole === "parent" ? "Docentes de mis hijos" : "Padres / Apoderados") : userRole === "admin" ? "Docentes" : "Dirección";
   return <div className="space-y-5">
     {familyNotice && <p role="status" className="rounded-2xl p-4 bg-amber-50 text-amber-900">{familyNotice}</p>}
     {tabs.length > 1 && <div className="flex flex-wrap gap-2">{tabs.map(id => {
@@ -147,8 +157,8 @@ export function CommunicationHub({ userRole, userId, userName = "Usuario" }: Com
     })}</div>}
     {userRole === "parent" && children.length > 0 && <div className="grid gap-3 md:grid-cols-2">{children.map(child => <article key={child.id} className="rounded-2xl border border-outline-variant/30 bg-white p-4 space-y-1">
       <p className="text-xs font-semibold text-primary">Estudiante vinculado</p><h2 className="font-bold">{child.full_name}</h2><p className="text-sm">{child.classroomLabel}</p>{child.email && <p className="text-xs text-on-surface-variant">{child.email}</p>}
-      {child.verificationPending ? <p className="text-sm text-amber-800">Solicita al colegio verificar este vínculo para consultar sus datos académicos y docentes.</p> : child.teachers.length ? <ul className="text-sm space-y-1 pt-2">{child.teachers.map((teacher, index) => <li key={`${teacher.id}:${index}`}><span className="font-semibold">{teacher.full_name}</span> · {teacher.courseName} · {teacher.classroomLabel}</li>)}</ul> : <p className="text-sm text-on-surface-variant">Sin docente asignado a sus cursos.</p>}
+      {activeTab === "teacher_parent" && (child.verificationPending ? <p className="text-sm text-amber-800">Solicita al colegio verificar este vínculo para consultar sus datos académicos y docentes.</p> : child.teachers.length ? <ul className="text-sm space-y-1 pt-2">{child.teachers.map((teacher, index) => <li key={`${teacher.id}:${index}`}><span className="font-semibold">{teacher.full_name}</span> · {teacher.courseName} · {teacher.classroomLabel}</li>)}</ul> : <p className="text-sm text-on-surface-variant">Sin docente asignado a sus cursos.</p>)}
     </article>)}</div>}
-    {error ? <div role="alert" className="p-5 rounded-2xl border border-red-200 bg-red-50 text-red-800">No se pudieron cargar los contactos: {error}</div> : loading ? <div className="flex items-center justify-center h-72 bg-white rounded-2xl border"><Loader2 className="animate-spin mr-2" />Cargando contactos...</div> : <ChatView key={`${userId}:${activeTab}`} channelType={activeTab} myId={userId} myName={userName} myRole={userRole} contacts={contacts} accentColor={tabInfo[activeTab].color} emptyPlaceholder="No hay contactos académicos vinculados" />}
+    {error ? <div role="alert" className="p-5 rounded-2xl border border-red-200 bg-red-50 text-red-800">No se pudieron cargar los contactos: {error}</div> : loading ? <div className="flex items-center justify-center h-72 bg-white rounded-2xl border"><Loader2 className="animate-spin mr-2" />Cargando contactos...</div> : <ChatView key={`${userId}:${activeTab}`} channelType={activeTab} myId={userId} myName={userName} myRole={userRole} contacts={contacts} accentColor={tabInfo[activeTab].color} emptyPlaceholder={activeTab === "student_parent" ? (userRole === "parent" ? "No tienes hijos vinculados a tu cuenta" : "No tienes familiares vinculados a tu cuenta") : "No hay contactos académicos vinculados"} />}
   </div>;
 }

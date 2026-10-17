@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Comunicación con Docentes | InfoTarea",
-  description: "Chat directo entre padres de familia y docentes de sus hijos",
+  title: "Comunicación | InfoTarea",
+  description: "Chat directo entre padres de familia, sus hijos y los docentes de sus cursos",
 };
 
 export default async function ParentCommunicationPage() {
@@ -28,9 +28,9 @@ export default async function ParentCommunicationPage() {
   return (
     <ParentLayout>
       <div className="space-y-2 mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">Comunicación con Docentes</h1>
+        <h1 className="text-2xl font-bold text-on-surface">Comunicación</h1>
         <p className="text-sm text-on-surface-variant">
-          Canal directo de mensajes con los profesores a cargo de las asignaturas de tus hijos
+          Canal directo de mensajes con tus hijos y con los profesores a cargo de sus asignaturas
         </p>
       </div>
 
