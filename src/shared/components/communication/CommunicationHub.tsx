@@ -23,6 +23,30 @@ export function CommunicationHub({
   const [contacts, setContacts] = useState<ChatContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>("teacher_student");
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const channel = supabase.channel('system_online_users');
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineIds = new Set<string>();
+        for (const key in state) {
+          state[key].forEach((presence: any) => {
+            if (presence.user_id) {
+              onlineIds.add(presence.user_id);
+            }
+          });
+        }
+        setOnlineUsers(onlineIds);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   // Determine available tabs per role
   const tabs: { id: TabId; label: string; icon: React.ElementType; color: string; accentColor: string; channel: string }[] = (() => {
@@ -207,14 +231,17 @@ export function CommunicationHub({
           }
         } else if (activeTab === "admin_teacher") {
           if (userRole === "admin") {
-            // Admin sees all teachers
+            // Admin sees only online teachers
             const { data: teachers } = await supabase
               .from("profiles")
               .select("id, full_name")
               .eq("role", "teacher")
               .order("full_name");
+
             setContacts(
-              (teachers || []).map(t => ({ id: t.id, name: t.full_name || "Docente", subtitle: "Docente" }))
+              (teachers || [])
+                .filter(t => onlineUsers.has(t.id))
+                .map(t => ({ id: t.id, name: t.full_name || "Docente", subtitle: "Docente" }))
             );
           } else if (userRole === "teacher") {
             // Teacher sees all admins
@@ -313,7 +340,7 @@ export function CommunicationHub({
     }
 
     if (userId) loadContacts();
-  }, [activeTab, userRole, userId]);
+  }, [activeTab, userRole, userId, onlineUsers]);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 

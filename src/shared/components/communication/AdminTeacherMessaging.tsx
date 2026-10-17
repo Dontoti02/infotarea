@@ -41,6 +41,30 @@ export function AdminTeacherMessaging({
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
   const [newDirectText, setNewDirectText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const channel = supabase.channel('system_online_users');
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineIds = new Set<string>();
+        for (const key in state) {
+          state[key].forEach((presence: any) => {
+            if (presence.user_id) {
+              onlineIds.add(presence.user_id);
+            }
+          });
+        }
+        setOnlineUsers(onlineIds);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   // Carga inicial de docentes desde profiles
   useEffect(() => {
@@ -53,8 +77,10 @@ export function AdminTeacherMessaging({
         .select("id, full_name, email, role")
         .eq("role", "teacher");
 
-      if (dbTeachers && dbTeachers.length > 0) {
-        const tList = dbTeachers.map((t) => ({
+      const onlineTeachers = (dbTeachers || []).filter(t => onlineUsers.has(t.id));
+
+      if (onlineTeachers.length > 0) {
+        const tList = onlineTeachers.map((t) => ({
           id: t.id,
           name: t.full_name || "Docente",
           area: "Plana Docente",
@@ -75,7 +101,7 @@ export function AdminTeacherMessaging({
     }
 
     loadTeachers();
-  }, [supabase]);
+  }, [supabase, onlineUsers]);
 
   // Cargar mensajes directos de Supabase
   useEffect(() => {
