@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "vercel:login": "npx --yes vercel@latest login",
+    "vercel:link": "npx --yes vercel@latest link",
+    "deploy": "npx --yes vercel@latest deploy --prod",
+    "deploy:fresh": "npx --yes vercel@latest deploy --prod --force",
     "test": "node --test tests/tdd/*.test.mjs tests/integration/*.test.mjs tests/acceptance/*.test.mjs"
   },
   "dependencies": {

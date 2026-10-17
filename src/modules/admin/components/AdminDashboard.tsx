@@ -7,20 +7,16 @@ import {
   School, 
   UserCircle, 
   BookOpen, 
-  FileText,
   ClipboardList,
   Megaphone, 
   Calendar, 
-  MoreVertical,
   UserPlus,
   Library,
   AlertCircle,
+  AlertTriangle,
   Clock,
   CheckCircle2,
-  Settings,
   History,
-  TrendingUp,
-  GraduationCap,
   Loader2,
   RefreshCw
 } from "lucide-react";
@@ -34,10 +30,29 @@ const defaultData: AdminDashboardData = {
   activeTasks: 0,
   totalNotices: 0,
   weeklyActivity: [],
+  studentsPerCourse: [],
+  usersByRole: [],
   recentActivity: [],
   todayDate: "",
   adminName: "Admin",
 };
+
+/** Color por rol para el donut y su leyenda. */
+const ROLE_COLORS: Record<string, { ring: string; dot: string }> = {
+  student: { ring: "stroke-primary", dot: "bg-primary" },
+  teacher: { ring: "stroke-secondary", dot: "bg-secondary" },
+  parent: { ring: "stroke-violet-400", dot: "bg-violet-400" },
+  admin: { ring: "stroke-indigo-400", dot: "bg-indigo-400" },
+};
+
+/** Rounds a value up to a clean 1/2/5/10 step so the chart axis shows whole numbers. */
+function niceChartStep(value: number): number {
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(value, 1)));
+  for (const factor of [1, 2, 5, 10]) {
+    if (factor * magnitude >= value) return factor * magnitude;
+  }
+  return 10 * magnitude;
+}
 
 export function AdminDashboard() {
   const router = useRouter();
@@ -63,11 +78,42 @@ export function AdminDashboard() {
     loadData();
   }, [loadData]);
 
-  // Find max for the chart scaling
-  const maxChartVal = Math.max(
-    1,
-    ...data.weeklyActivity.map((d) => Math.max(d.submissions, d.created))
+  // Chart scaling — axis always ends on a whole number
+  const rawMaxChartVal = data.weeklyActivity.reduce(
+    (max, d) => Math.max(max, d.submissions, d.created),
+    0
   );
+  const chartStep = niceChartStep(rawMaxChartVal / 4);
+  const maxChartVal = chartStep * 4;
+  const hasChartData = rawMaxChartVal > 0;
+
+  // Matrículas por curso (barras horizontales)
+  const maxCourseStudents = data.studentsPerCourse.reduce((max, c) => Math.max(max, c.students), 0);
+  const totalMemberships = data.studentsPerCourse.reduce((sum, c) => sum + c.students, 0);
+  const emptyCourses = data.studentsPerCourse.filter((c) => c.students === 0).length;
+
+  // Usuarios por rol (donut): porcentaje y desplazamiento de cada segmento
+  const totalUsersByRole = data.usersByRole.reduce((sum, r) => sum + r.count, 0);
+  const roleSegments = data.usersByRole.reduce<{
+    role: string;
+    label: string;
+    count: number;
+    pct: number;
+    offset: number;
+    colors: { ring: string; dot: string };
+  }[]>((segments, role) => {
+    const pct = totalUsersByRole > 0 ? (role.count / totalUsersByRole) * 100 : 0;
+    const previous = segments[segments.length - 1];
+    return [
+      ...segments,
+      {
+        ...role,
+        pct,
+        offset: previous ? previous.offset + previous.pct : 0,
+        colors: ROLE_COLORS[role.role] ?? { ring: "stroke-outline", dot: "bg-outline" },
+      },
+    ];
+  }, []);
 
   const kpis = [
     { label: "Total Usuarios", value: data.totalUsers.toLocaleString(), icon: <Users size={20} />, color: "bg-secondary-container/50 text-secondary", route: "/admin/usuarios" },
@@ -168,7 +214,7 @@ export function AdminDashboard() {
               </button>
             </div>
 
-            {data.weeklyActivity.length === 0 ? (
+            {!hasChartData ? (
               <div className="flex-1 flex items-center justify-center text-on-surface-variant">
                 <p className="text-body-md font-medium">No hay datos de actividad esta semana</p>
               </div>
@@ -187,11 +233,9 @@ export function AdminDashboard() {
                 </div>
                 <div className="flex-1 flex items-end gap-sm md:gap-md pt-lg border-b border-outline-variant/50 relative">
                   <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-outline font-bold text-[10px] pb-8 uppercase">
-                    <span>{maxChartVal}</span>
-                    <span>{Math.round(maxChartVal * 0.75)}</span>
-                    <span>{Math.round(maxChartVal * 0.5)}</span>
-                    <span>{Math.round(maxChartVal * 0.25)}</span>
-                    <span>0</span>
+                    {[4, 3, 2, 1, 0].map((tick) => (
+                      <span key={tick}>{chartStep * tick}</span>
+                    ))}
                   </div>
                   <div className="flex-1 flex justify-around items-end h-full pl-8 pb-2">
                     {data.weeklyActivity.map((d) => {
@@ -282,6 +326,138 @@ export function AdminDashboard() {
                   <span className="text-label-sm font-bold text-outline whitespace-nowrap">{act.time}</span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Gráficos adicionales */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+
+        {/* Estudiantes por curso */}
+        <div className="bg-surface rounded-xl p-lg shadow-sm border border-outline-variant/30 flex flex-col">
+          <div className="flex justify-between items-start gap-md mb-lg">
+            <div>
+              <h3 className="text-title-lg font-bold text-on-surface">Estudiantes por curso</h3>
+              <p className="text-label-sm font-medium text-on-surface-variant mt-1">
+                Matrículas registradas en cada curso.
+              </p>
+            </div>
+            <span className="text-label-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
+              {totalMemberships} matrículas
+            </span>
+          </div>
+
+          {data.studentsPerCourse.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center py-xl text-on-surface-variant">
+              <div className="text-center">
+                <BookOpen size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-body-md font-medium">No hay cursos registrados</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="space-y-md">
+                {data.studentsPerCourse.map((course) => {
+                  const pct = maxCourseStudents > 0 ? (course.students / maxCourseStudents) * 100 : 0;
+                  const isEmpty = course.students === 0;
+                  return (
+                    <div key={course.id}>
+                      <div className="flex items-center justify-between gap-sm mb-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-label-md font-bold text-on-surface truncate" title={course.name}>
+                            {course.name}
+                          </span>
+                          {course.section && (
+                            <span className="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded-full shrink-0">
+                              {course.section}
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-label-md font-bold tabular-nums shrink-0 ${isEmpty ? "text-amber-600 dark:text-amber-300" : "text-on-surface"}`}>
+                          {isEmpty ? "Sin estudiantes" : course.students}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${isEmpty ? "" : "bg-gradient-to-r from-primary to-primary-container"}`}
+                          style={{ width: `${isEmpty ? 0 : Math.max(pct, 3)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {emptyCourses > 0 && (
+                <p className="mt-lg flex items-center gap-1.5 text-label-sm font-bold text-amber-600 dark:text-amber-300">
+                  <AlertTriangle size={14} />
+                  {emptyCourses === 1
+                    ? "1 curso no tiene estudiantes asignados"
+                    : `${emptyCourses} cursos no tienen estudiantes asignados`}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Usuarios por rol */}
+        <div className="bg-surface rounded-xl p-lg shadow-sm border border-outline-variant/30 flex flex-col">
+          <div className="mb-lg">
+            <h3 className="text-title-lg font-bold text-on-surface">Usuarios por rol</h3>
+            <p className="text-label-sm font-medium text-on-surface-variant mt-1">
+              Composición de la comunidad educativa.
+            </p>
+          </div>
+
+          {data.usersByRole.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center py-xl text-on-surface-variant">
+              <div className="text-center">
+                <Users size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-body-md font-medium">No hay usuarios registrados</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-xl">
+              <div className="relative w-40 h-40 shrink-0">
+                <svg viewBox="0 0 42 42" className="w-full h-full -rotate-90">
+                  <circle
+                    cx="21" cy="21" r="15.9155" fill="none" strokeWidth="6"
+                    className="stroke-surface-container-high"
+                  />
+                  {roleSegments.map((segment) => (
+                    <circle
+                      key={segment.role}
+                      cx="21" cy="21" r="15.9155" fill="none" strokeWidth="6"
+                      pathLength={100}
+                      strokeDasharray={`${segment.pct} ${100 - segment.pct}`}
+                      strokeDashoffset={-segment.offset}
+                      className={`${segment.colors.ring} transition-all`}
+                    />
+                  ))}
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-headline-md font-bold text-on-surface tabular-nums">{totalUsersByRole}</span>
+                  <span className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Usuarios</span>
+                </div>
+              </div>
+
+              <div className="w-full sm:w-auto flex-1 space-y-sm">
+                {roleSegments.map((segment) => (
+                  <div key={segment.role} className="flex items-center justify-between gap-sm">
+                    <div className="flex items-center gap-sm min-w-0">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${segment.colors.dot}`} />
+                      <span className="text-label-md font-bold text-on-surface truncate">{segment.label}</span>
+                    </div>
+                    <div className="flex items-baseline gap-xs shrink-0">
+                      <span className="text-label-md font-bold text-on-surface tabular-nums">{segment.count}</span>
+                      <span className="text-label-sm font-medium text-on-surface-variant tabular-nums">
+                        ({segment.pct.toFixed(1)}%)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

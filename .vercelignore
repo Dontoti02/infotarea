@@ -1,0 +1,29 @@
+# Local configuration and credentials
+.git/
+.vercel/
+.env*
+*.pem
+.aws/
+.codex/
+.agents/
+brain/
+
+# Dependencies and generated output are recreated by Vercel
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+*.log
+
+# Local reports, reference material, and scratch tools
+/assets/
+pruebas_funcionales/
+tests/
+__pycache__/
+*.docx
+*.py
+scratch_*.js
+fix-user.js
+/PUBLICAR-VERCEL.cmd

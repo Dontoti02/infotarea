@@ -29,11 +29,53 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Publicar cambios en Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Para los cambios de presencia, mensajes y ficha familiar, aplicar primero los pasos de [activación del módulo de comunicación](docs/communication-deployment.md). La publicación de código no actualiza las políticas ni las tablas de Supabase.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+En Windows puedes hacer doble clic en `PUBLICAR-VERCEL.cmd` para iniciar sesion, vincular esta carpeta con tu proyecto existente (la primera vez) y publicar en produccion sin cache de compilacion. El archivo se detiene si un paso falla y mantiene la ventana abierta para leer el resultado.
+
+Guardar archivos en tu PC no actualiza por sí solo la web publicada. Puedes publicar esta carpeta directamente con Vercel CLI, incluso si no tiene una carpeta `.git`.
+
+Necesitas Node.js, npm, conexión a Internet y acceso al proyecto existente de Vercel. Los comandos usan la CLI oficial mediante `npx`; no necesitas instalarla globalmente ni instalar las dependencias de la aplicación para enviar el código. Vercel instala las dependencias y ejecuta la compilación en sus servidores.
+
+### Configuración inicial (una vez por carpeta)
+
+Desde PowerShell:
+
+```powershell
+Set-Location 'C:\xampp\htdocs\infotarea'
+npm.cmd run vercel:login
+npm.cmd run vercel:link
+```
+
+Completa el inicio de sesión. Al vincular, elige la cuenta o equipo que contiene tu web, responde **sí** a vincular con un proyecto existente y selecciona el proyecto de InfoTarea que tiene tu dominio actual. La vinculación queda guardada en `.vercel/project.json`, excluido de Git y del envío de código.
+
+### Publicar los archivos locales
+
+```powershell
+npm.cmd run deploy
+```
+
+Para forzar una nueva compilación sin reutilizar la caché de compilación:
+
+```powershell
+npm.cmd run deploy:fresh
+```
+
+Estos comandos publican en **Production** del proyecto vinculado. Espera a que terminen correctamente; si la compilación falla, revisa el error y los Build Logs del despliegue en Vercel. Una compilación fallida no actualiza la versión que visitan los usuarios. `.vercelignore` excluye configuración local, credenciales, informes y archivos de referencia del envío.
+
+Comprueba el resultado en el dominio de producción que aparece en Vercel → proyecto → **Domains**, usando una ventana privada o `Ctrl+F5`. Las URL de un despliegue concreto muestran esa versión; para comprobar futuras actualizaciones usa siempre el dominio de producción. Forzar la compilación no limpia la caché del navegador.
+
+La publicación directa no guarda los cambios en GitHub: conserva también una copia versionada de tu trabajo.
+
+### Si prefieres publicación automática desde GitHub
+
+En Vercel verifica que el proyecto esté conectado a `Dontoti02/infotarea` y que la rama de producción sea la misma a la que subes tus cambios. Cada nuevo push a esa rama puede generar el despliegue de producción. Si esta carpeta se descargó como ZIP y no contiene `.git`, clona el repositorio en otra carpeta y traslada tus cambios allí antes de hacer commit y push.
+
+Un **Redeploy** de un despliegue antiguo vuelve a publicar su código; no recoge archivos que solo existen en tu PC. Para esos archivos usa los comandos anteriores o súbelos primero a GitHub.
+
+Referencias oficiales: [desplegar con la CLI](https://vercel.com/docs/cli/deploy), [vincular un proyecto](https://vercel.com/docs/cli/link), [integración con Git](https://vercel.com/docs/git).
 
 ## Imagen de referencia web infotarea
 

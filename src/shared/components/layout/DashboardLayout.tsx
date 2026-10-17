@@ -22,6 +22,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
+import { WebPresence } from "@/shared/components/communication/WebPresence";
 
 export interface NavItem {
   label: string;
@@ -413,6 +414,7 @@ export function DashboardLayout({
 
   return (
     <div className="min-h-screen flex bg-background text-on-background font-sans antialiased">
+      <WebPresence userId={profileId} />
       {/* Sidebar Backdrop for Mobile */}
       {isSidebarOpen && (
         <div 

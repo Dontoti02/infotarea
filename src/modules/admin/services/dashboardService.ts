@@ -8,6 +8,8 @@ export interface AdminDashboardData {
   activeTasks: number;
   totalNotices: number;
   weeklyActivity: { day: string; submissions: number; created: number }[];
+  studentsPerCourse: { id: string; name: string; section: string; students: number }[];
+  usersByRole: { role: string; label: string; count: number }[];
   recentActivity: {
     id: string;
     action: string;
@@ -97,33 +99,79 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
       .limit(5),
   ]);
 
-  // Build weekly activity by day (Lunes a Viernes)
-  const orderDays = ["Lun", "Mar", "Mié", "Jue", "Vie"];
+  // Build weekly activity by day: last 7 days ending today (weekends included)
+  const toDateKey = (date: Date) =>
+    `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+  const lastWeek: { key: string; day: string }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    lastWeek.push({ key: toDateKey(d), day: DAYS_SHORT[d.getDay()] });
+  }
+
   const weeklyMap: Record<string, { submissions: number; created: number }> = {};
 
-  orderDays.forEach((day) => {
-    weeklyMap[day] = { submissions: 0, created: 0 };
+  lastWeek.forEach(({ key }) => {
+    weeklyMap[key] = { submissions: 0, created: 0 };
   });
 
   (submissions.data ?? []).forEach((s) => {
-    const d = new Date(s.created_at);
-    const key = DAYS_SHORT[d.getDay()];
+    const key = toDateKey(new Date(s.created_at));
     if (weeklyMap[key]) weeklyMap[key].submissions++;
   });
 
   (newProfiles.data ?? []).forEach((p) => {
-    const d = new Date(p.created_at);
-    const key = DAYS_SHORT[d.getDay()];
+    const key = toDateKey(new Date(p.created_at));
     if (weeklyMap[key]) weeklyMap[key].created++;
   });
 
-  const weeklyActivity = orderDays.map((day) => ({
+  const weeklyActivity = lastWeek.map(({ key, day }) => ({
     day,
-    submissions: weeklyMap[day].submissions,
-    created: weeklyMap[day].created,
+    submissions: weeklyMap[key].submissions,
+    created: weeklyMap[key].created,
   }));
 
-  // 4. Recent activity
+  // 4. Chart data: enrollments per course + users by role
+  const [coursesList, memberships, profilesRoles] = await Promise.all([
+    supabase.from("courses").select("id, name, section"),
+    supabase.from("course_members").select("course_id"),
+    supabase.from("profiles").select("role"),
+  ]);
+
+  const membersByCourse: Record<string, number> = {};
+  (memberships.data ?? []).forEach((m) => {
+    if (!m.course_id) return;
+    membersByCourse[m.course_id] = (membersByCourse[m.course_id] ?? 0) + 1;
+  });
+
+  const studentsPerCourse = (coursesList.data ?? [])
+    .map((c) => ({
+      id: c.id as string,
+      name: (c.name as string) ?? "Curso sin nombre",
+      section: (c.section as string) ?? "",
+      students: membersByCourse[c.id as string] ?? 0,
+    }))
+    .sort((a, b) => b.students - a.students || a.name.localeCompare(b.name));
+
+  const ROLE_LABELS: Record<string, string> = {
+    student: "Estudiantes",
+    teacher: "Docentes",
+    parent: "Padres de familia",
+    admin: "Administradores",
+  };
+
+  const roleCounts: Record<string, number> = {};
+  (profilesRoles.data ?? []).forEach((p) => {
+    const role = (p.role as string) ?? "student";
+    roleCounts[role] = (roleCounts[role] ?? 0) + 1;
+  });
+
+  const usersByRole = Object.entries(roleCounts)
+    .map(([role, count]) => ({ role, label: ROLE_LABELS[role] ?? role, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // 5. Recent activity
   const recentActivity: AdminDashboardData["recentActivity"] = [];
 
   // Recent notices
@@ -150,7 +198,6 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
 
   // Recent new users
   if (newProfiles.data && newProfiles.data.length > 0 && Array.isArray(newProfiles.data)) {
-    const recentUsers = newProfiles.data as { created_at: string }[];
     const lastUsers = await supabase
       .from("profiles")
       .select("id, full_name, role, created_at")
@@ -179,7 +226,7 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     return b.time.localeCompare(a.time);
   });
 
-  // 5. Today's date
+  // 6. Today's date
   const today = new Date();
   const dayNames = [
     "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado",
@@ -198,6 +245,8 @@ export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
     activeTasks: activeTasks ?? 0,
     totalNotices: totalNotices ?? 0,
     weeklyActivity,
+    studentsPerCourse,
+    usersByRole,
     recentActivity: recentActivity.slice(0, 5),
     todayDate,
     adminName,

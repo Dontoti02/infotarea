@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { childAcademicInfo, verifiedChildIds, queryFamilyLinks, FAMILY_VERIFICATION_NOTICE, type FamilyLink } from "@/shared/utils/communication";
 
 export async function GET(request: Request) {
   try {
@@ -10,11 +11,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    const { data: caller } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (caller?.role !== "parent") return NextResponse.json({ error: "Acceso exclusivo para padres" }, { status: 403 });
+
     // 1. Get linked student profile IDs
-    const { data: links, error: linkErr } = await supabase
-      .from("parent_children")
-      .select("id, student_profile_id, linked_at")
-      .eq("parent_profile_id", user.id);
+    const { data: links, error: linkErr, verificationAvailable } = await queryFamilyLinks<FamilyLink[]>(includeVerification => {
+      const query = supabase.from("parent_children");
+      return includeVerification
+        ? query.select("id, student_profile_id, linked_at, verified_at").eq("parent_profile_id", user.id)
+        : query.select("id, student_profile_id, linked_at").eq("parent_profile_id", user.id);
+    });
+    const notice = verificationAvailable ? undefined : FAMILY_VERIFICATION_NOTICE;
 
     if (linkErr) {
       console.error("Error fetching parent_children:", linkErr);
@@ -22,10 +29,11 @@ export async function GET(request: Request) {
     }
 
     if (!links || links.length === 0) {
-      return NextResponse.json({ children: [] });
+      return NextResponse.json({ children: [], verificationAvailable, notice }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     const studentIds = links.map((l) => l.student_profile_id);
+    const verifiedIds = new Set(verificationAvailable ? verifiedChildIds(links) : []);
 
     // 2. Fetch full student profiles
     const { data: profiles, error: profErr } = await supabase
@@ -51,7 +59,7 @@ export async function GET(request: Request) {
           )
         )
       `)
-      .in("id", studentIds);
+      .in("id", studentIds).eq("role", "student");
 
     if (profErr) {
       console.error("Error fetching student profiles:", profErr);
@@ -59,7 +67,7 @@ export async function GET(request: Request) {
     }
 
     // 3. Fetch submissions/grades for these students
-    const { data: submissions } = await supabase
+    const { data: submissions, error: submissionsError } = verifiedIds.size ? await supabase
       .from("submissions")
       .select(`
         id,
@@ -81,12 +89,15 @@ export async function GET(request: Request) {
           )
         )
       `)
-      .in("student_id", studentIds)
-      .order("created_at", { ascending: false });
+      .in("student_id", Array.from(verifiedIds))
+      .order("created_at", { ascending: false }) : { data: [], error: null };
+
+    if (submissionsError) return NextResponse.json({ error: "No se pudo consultar el seguimiento del estudiante" }, { status: 503 });
 
     // 4. Also fetch active tasks for their enrolled courses
     const allCourseIds = new Set<string>();
     (profiles || []).forEach((p: any) => {
+      if (!verifiedIds.has(p.id)) return;
       (p.course_members || []).forEach((cm: any) => {
         if (cm.courses?.id) allCourseIds.add(cm.courses.id);
       });
@@ -94,7 +105,7 @@ export async function GET(request: Request) {
 
     let courseTasks: any[] = [];
     if (allCourseIds.size > 0) {
-      const { data: tasksData } = await supabase
+      const { data: tasksData, error: tasksError } = await supabase
         .from("tasks")
         .select(`
           id,
@@ -110,14 +121,15 @@ export async function GET(request: Request) {
         `)
         .in("course_id", Array.from(allCourseIds))
         .order("due_date", { ascending: false });
+      if (tasksError) return NextResponse.json({ error: "No se pudieron consultar las tareas" }, { status: 503 });
       courseTasks = tasksData || [];
     }
 
     // 5. Build rich children objects
     const children = (profiles || []).map((prof: any) => {
-      const courses = (prof.course_members || [])
-        .map((cm: any) => cm.courses)
-        .filter(Boolean);
+      const verificationPending = !verifiedIds.has(prof.id);
+      const academic = childAcademicInfo(verificationPending ? { course_members: [] } : prof);
+      const { courses, section, teachers } = academic;
 
       const studentSubs = (submissions || []).filter((s: any) => s.student_id === prof.id);
 
@@ -130,21 +142,6 @@ export async function GET(request: Request) {
       const highestScore = evaluatedSubs.length > 0
         ? Math.max(...evaluatedSubs.map((s: any) => Number(s.score)))
         : null;
-
-      // Primary section/grade
-      const primaryCourse = courses[0];
-      const section = primaryCourse?.section || "1A";
-
-      // Teachers of courses
-      const teachers = courses
-        .filter((c: any) => c.teacher)
-        .map((c: any) => ({
-          courseName: c.name,
-          section: c.section,
-          id: c.teacher.id,
-          full_name: c.teacher.full_name,
-          email: c.teacher.email,
-        }));
 
       // Find pending tasks for this student
       const submittedTaskIds = new Set(studentSubs.map((s: any) => s.task_id));
@@ -160,6 +157,10 @@ export async function GET(request: Request) {
         section,
         courses,
         teachers,
+        grade: academic.grade,
+        classrooms: academic.classrooms,
+        classroomLabel: !verificationAvailable ? "Verificación familiar pendiente de activación" : verificationPending ? "Vínculo pendiente de verificación" : academic.classroomLabel,
+        verificationPending,
         stats: {
           averageScore,
           highestScore,
@@ -172,7 +173,7 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json({ children });
+    return NextResponse.json({ children, verificationAvailable, notice }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (err: any) {
     console.error("Error in children endpoint:", err);
     return NextResponse.json({ error: err.message || "Error interno" }, { status: 500 });

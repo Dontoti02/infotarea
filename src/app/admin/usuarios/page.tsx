@@ -8,7 +8,7 @@ export default function UsersPage() {
         <div className="flex items-end justify-between">
           <div>
             <h2 className="text-headline-lg font-bold text-on-surface mb-xs">Gestión de Usuarios</h2>
-            <p className="text-body-md text-on-surface-variant">Administra las cuentas de alumnos, docentes y personal administrativo.</p>
+            <p className="text-body-md text-on-surface-variant">Administra las cuentas de alumnos, padres de familia, docentes y personal administrativo.</p>
           </div>
         </div>
         <UserManagement />

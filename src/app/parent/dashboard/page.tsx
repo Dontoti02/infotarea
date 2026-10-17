@@ -23,12 +23,16 @@ import {
 import { ParentLayout } from "@/modules/parent/components/ParentLayout";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { requestCommunicationJson } from "@/shared/utils/communication";
 
 interface ChildData {
   id: string;
   full_name: string;
   email?: string;
-  section: string;
+  section: string | null;
+  grade: string | null;
+  classroomLabel: string;
+  verificationPending?: boolean;
   courses: Array<{
     id: string;
     name: string;
@@ -46,6 +50,7 @@ interface ChildData {
     email: string;
     courseName: string;
     section: string;
+    classroomLabel: string;
   }>;
   stats: {
     averageScore: number | null;
@@ -90,13 +95,19 @@ export default function ParentDashboardPage() {
   const [children, setChildren] = useState<ChildData[]>([]);
   const [selectedChildIndex, setSelectedChildIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [familyNotice, setFamilyNotice] = useState("");
   const [activeTab, setActiveTab] = useState<"resumen" | "calificaciones" | "tareas" | "docentes">("resumen");
 
   useEffect(() => {
+    let alive = true;
+    const controller = new AbortController();
     async function loadData() {
       try {
-        const res = await fetch("/api/parents/children");
-        const data = await res.json();
+        const { response: res, data } = await requestCommunicationJson<{ children: ChildData[]; error?: string; notice?: string }>("/api/parents/children", { cache: "no-store", signal: controller.signal });
+        if (!alive) return;
+        if (!res.ok) throw new Error(data.error || "No se pudo cargar la ficha familiar");
+        setFamilyNotice(data.notice || "");
         if (data.children) {
           setChildren(data.children);
           if (data.children.length === 0) {
@@ -104,12 +115,15 @@ export default function ParentDashboardPage() {
           }
         }
       } catch (err) {
+        if (!alive || controller.signal.aborted) return;
         console.error("Error loading parent dashboard data:", err);
+        setLoadError(err instanceof Error ? err.message : "No se pudo cargar la ficha familiar");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     }
     loadData();
+    return () => { alive = false; controller.abort(); };
   }, [router]);
 
   if (loading) {
@@ -121,6 +135,10 @@ export default function ParentDashboardPage() {
         </div>
       </ParentLayout>
     );
+  }
+
+  if (loadError) {
+    return <ParentLayout><div role="alert" className="p-6 rounded-2xl border border-red-200 bg-red-50 text-red-800">{loadError}</div></ParentLayout>;
   }
 
   if (children.length === 0) {
@@ -151,6 +169,7 @@ export default function ParentDashboardPage() {
   return (
     <ParentLayout>
       <div className="space-y-6 pb-12">
+        {(familyNotice || activeChild.verificationPending) && <p role="status" className="rounded-2xl p-4 bg-amber-50 text-amber-900">{familyNotice || "El colegio debe verificar el vínculo con este estudiante antes de mostrar sus datos académicos y docentes."}</p>}
         {/* Child Selector Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/20 shadow-xs">
           <div className="flex flex-wrap items-center gap-2">
@@ -184,7 +203,7 @@ export default function ParentDashboardPage() {
                       : "bg-outline-variant/20 text-on-surface-variant"
                   }`}
                 >
-                  Sec. {child.section}
+                  {child.classroomLabel}
                 </span>
               </button>
             ))}
@@ -211,8 +230,9 @@ export default function ParentDashboardPage() {
               {activeChild.full_name}
             </h1>
             <p className="text-sm text-on-surface-variant">
-              Matriculado en <strong className="text-on-surface">Sección {activeChild.section}</strong> • {activeChild.courses.length} curso(s) activos
+              <strong className="text-on-surface">{activeChild.classroomLabel}</strong> • {activeChild.courses.length} curso(s) activos
             </p>
+            {activeChild.email && <p className="text-sm text-on-surface-variant">Correo: {activeChild.email}</p>}
           </div>
 
           <div className="flex items-center gap-3">
@@ -314,7 +334,7 @@ export default function ParentDashboardPage() {
               <span className="text-xs text-on-surface-variant font-bold">materias</span>
             </div>
             <p className="text-xs text-on-surface-variant">
-              Sección: {activeChild.section}
+              {activeChild.classroomLabel}
             </p>
           </div>
         </div>
@@ -645,7 +665,7 @@ export default function ParentDashboardPage() {
                           {teacher.courseName}
                         </p>
                         <p className="text-[11px] text-on-surface-variant">
-                          Sección: {teacher.section}
+                          {teacher.classroomLabel}
                         </p>
                       </div>
                     </div>

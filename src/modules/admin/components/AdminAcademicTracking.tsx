@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { 
   Search, 
-  Filter, 
   RefreshCw, 
   Trophy, 
   FileText, 
@@ -14,7 +13,7 @@ import {
   Edit3, 
   ChevronRight, 
   User, 
-  Plus, 
+  Users,
   Check, 
   X,
   BookOpen,
@@ -44,6 +43,28 @@ interface Student {
     performance: "Excelente" | "Aprobado" | "En riesgo" | "Sin actividad";
   };
 }
+
+// Estilos por nivel de rendimiento (reutilizados en la lista y el detalle)
+const PERFORMANCE_STYLES: Record<Student["stats"]["performance"], { chip: string; dot: string }> = {
+  Excelente: { chip: "bg-secondary-container/30 text-on-secondary-container", dot: "bg-secondary" },
+  Aprobado: { chip: "bg-primary/10 text-primary", dot: "bg-primary" },
+  "En riesgo": { chip: "bg-error/10 text-error", dot: "bg-error" },
+  "Sin actividad": { chip: "bg-surface-container text-on-surface-variant", dot: "bg-outline-variant" },
+};
+
+const PERFORMANCE_FILTERS = [
+  { value: "all", label: "Todos", dot: "" },
+  { value: "Excelente", label: "Excelente", dot: "bg-secondary" },
+  { value: "Aprobado", label: "Aprobado", dot: "bg-primary" },
+  { value: "En riesgo", label: "En riesgo", dot: "bg-error" },
+  { value: "Sin actividad", label: "Sin actividad", dot: "bg-outline-variant" },
+] as const;
+
+const SORT_OPTIONS: { key: "name" | "score" | "progress"; label: string }[] = [
+  { key: "name", label: "Nombre" },
+  { key: "score", label: "Calificación" },
+  { key: "progress", label: "Progreso" },
+];
 
 export function AdminAcademicTracking() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -84,9 +105,7 @@ export function AdminAcademicTracking() {
           id,
           full_name,
           avatar_url,
-          temp_credentials (
-            email
-          ),
+          email,
           course_members (
             courses (
               id,
@@ -126,7 +145,7 @@ export function AdminAcademicTracking() {
 
         const courseIds = courses.map(c => c.id);
         const courseSection = courses[0]?.section || null;
-        const email = profile.temp_credentials?.[0]?.email || "sin_correo@infotarea.edu";
+        const email = profile.email || "";
 
         // Filter tasks assigned to student's courses
         const assignedTasks = tasks.filter(t => courseIds.includes(t.course_id));
@@ -328,152 +347,6 @@ export function AdminAcademicTracking() {
     }
   };
 
-  // Generate complete mock academic data for testing purposes
-  const handleGenerateTestData = async (student: Student) => {
-    if (!confirm(`¿Deseas generar datos de prueba académicos para ${student.full_name}? Esto creará cursos, tareas y entregas ficticias.`)) {
-      return;
-    }
-
-    try {
-      setLoadingDetails(true);
-      
-      const targetSection = student.courseSection || "3A";
-      
-      // 1. Check if course members or courses exist. If not, generate courses.
-      let { data: existingCourses } = await supabase
-        .from("courses")
-        .select("*")
-        .eq("section", targetSection);
-        
-      if (!existingCourses || existingCourses.length === 0) {
-        // Create 4 subjects
-        const subjects = [
-          { name: "Matemáticas Avanzadas", section: targetSection, image_url: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500" },
-          { name: "Física y Química", section: targetSection, image_url: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=500" },
-          { name: "Lengua y Literatura", section: targetSection, image_url: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=500" },
-          { name: "Historia Universal", section: targetSection, image_url: "https://images.unsplash.com/photo-1461360228754-6e81c478bc88?w=500" }
-        ];
-
-        const { data: newCourses, error: cErr } = await supabase
-          .from("courses")
-          .insert(subjects)
-          .select();
-          
-        if (cErr) throw cErr;
-        existingCourses = newCourses;
-      }
-
-      // 2. Enroll student in these courses if not enrolled
-      const currentCourseIds = student.courses.map(c => c.id);
-      const coursesToEnroll = (existingCourses || []).filter(c => !currentCourseIds.includes(c.id));
-      
-      if (coursesToEnroll.length > 0) {
-        const enrollments = coursesToEnroll.map(c => ({
-          course_id: c.id,
-          profile_id: student.id
-        }));
-
-        const { error: eErr } = await supabase
-          .from("course_members")
-          .insert(enrollments);
-          
-        if (eErr) throw eErr;
-      }
-
-      // Refresh list of courses
-      const allCourseIds = (existingCourses || []).map(c => c.id);
-
-      // 3. Check tasks. If none, create 2 tasks per course.
-      const { data: currentTasks } = await supabase
-        .from("tasks")
-        .select("*")
-        .in("course_id", allCourseIds);
-
-      let tasksList = currentTasks || [];
-      
-      if (tasksList.length === 0) {
-        const tasksToInsert: any[] = [];
-        const taskTitles = [
-          { title: "Examen Parcial - Unidad 1", type: "exam", desc: "Examen escrito de los conceptos fundamentales analizados en clase." },
-          { title: "Práctica de Laboratorio Nro 2", type: "homework", desc: "Elaboración de informe estructurado y conclusiones de la práctica." },
-          { title: "Foro de Debate Semanal", type: "forum", desc: "Publica tu opinión sobre el tema de la semana y responde a al menos dos compañeros." }
-        ];
-
-        allCourseIds.forEach(courseId => {
-          taskTitles.forEach((tInfo, idx) => {
-            const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() - (idx * 5) + 3); // some past, some future
-            tasksToInsert.push({
-              course_id: courseId,
-              title: tInfo.title,
-              description: tInfo.desc,
-              task_type: tInfo.type,
-              due_date: dueDate.toISOString()
-            });
-          });
-        });
-
-        const { data: newTasks, error: tErr } = await supabase
-          .from("tasks")
-          .insert(tasksToInsert)
-          .select();
-
-        if (tErr) throw tErr;
-        tasksList = newTasks || [];
-      }
-
-      // 4. Generate submissions for the student
-      const studentTasksIds = tasksList.map(t => t.id);
-      const { data: currentSubmissions } = await supabase
-        .from("submissions")
-        .select("*")
-        .eq("student_id", student.id);
-
-      const submittedTaskIds = (currentSubmissions || []).map(s => s.task_id);
-      const unsubmittedTasks = tasksList.filter(t => !submittedTaskIds.includes(t.id));
-
-      if (unsubmittedTasks.length > 0) {
-        const submissionsToInsert: any[] = [];
-        
-        unsubmittedTasks.forEach((task, idx) => {
-          // Only submit some tasks to leave others as "not submitted"
-          if (idx % 3 !== 2) {
-            const isReviewed = idx % 2 === 0;
-            const score = isReviewed ? parseFloat((5 + Math.random() * 5).toFixed(1)) : null;
-            const status = isReviewed ? "reviewed" : "pending";
-            const feedback = isReviewed ? "Excelente desarrollo del tema propuesto." : null;
-
-            submissionsToInsert.push({
-              task_id: task.id,
-              student_id: student.id,
-              content: "https://www.google.com/drive/ficticia/archivo_entregado.pdf",
-              status,
-              score,
-              feedback,
-              created_at: new Date(new Date(task.due_date).getTime() - 86400000).toISOString() // submitted 1 day before due date
-            });
-          }
-        });
-
-        if (submissionsToInsert.length > 0) {
-          const { error: sErr } = await supabase
-            .from("submissions")
-            .insert(submissionsToInsert);
-            
-          if (sErr) throw sErr;
-        }
-      }
-
-      // Reload
-      await loadTrackingData(student.id);
-    } catch (err: any) {
-      console.error("Error generating test data:", err);
-      alert("Error al generar datos de prueba: " + err.message);
-    } finally {
-      setLoadingDetails(false);
-    }
-  };
-
   // Get unique grades/sections for filtering
   const sections = Array.from(
     new Set(students.map(s => s.courseSection).filter((s): s is string => s !== null))
@@ -504,11 +377,84 @@ export function AdminAcademicTracking() {
       return a.full_name.localeCompare(b.full_name);
     });
 
+  // Resumen general para el monitoreo (calculado con los datos ya cargados)
+  const studentsWithActivity = students.filter(s => s.stats.completedTasks > 0);
+  const studentsAtRisk = students.filter(s => s.stats.performance === "En riesgo");
+  const pendingReviewsTotal = students.reduce((sum, s) => sum + s.stats.pendingReviews, 0);
+  const generalAverage = studentsWithActivity.length > 0
+    ? (studentsWithActivity.reduce((sum, s) => sum + s.stats.averageScore, 0) / studentsWithActivity.length).toFixed(1)
+    : "—";
+
+  const summaryCards = [
+    {
+      label: "Estudiantes",
+      value: students.length,
+      hint: `${studentsWithActivity.length} con entregas`,
+      icon: <Users size={18} />,
+      tone: "bg-primary/10 text-primary"
+    },
+    {
+      label: "Por calificar",
+      value: pendingReviewsTotal,
+      hint: "entregas pendientes",
+      icon: <Clock size={18} />,
+      tone: "bg-amber-400/20 text-amber-600 dark:text-amber-300"
+    },
+    {
+      label: "En riesgo",
+      value: studentsAtRisk.length,
+      hint: "necesitan apoyo",
+      icon: <AlertTriangle size={18} />,
+      tone: "bg-error/10 text-error"
+    },
+    {
+      label: "Promedio general",
+      value: generalAverage,
+      hint: "escala 0 a 10",
+      icon: <Trophy size={18} />,
+      tone: "bg-tertiary/10 text-tertiary"
+    },
+  ];
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-        <p className="text-on-surface-variant font-medium">Cargando panel de seguimiento académico...</p>
+      <div className="space-y-lg animate-fade-in">
+        {/* Esqueletos del resumen */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-sm md:gap-md">
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-sm p-md">
+              <div className="flex items-center gap-sm">
+                <div className="w-9 h-9 rounded-xl bg-surface-container animate-pulse" />
+                <div className="h-3 w-20 rounded-full bg-surface-container animate-pulse" />
+              </div>
+              <div className="h-7 w-16 rounded-lg bg-surface-container animate-pulse mt-md" />
+            </div>
+          ))}
+        </div>
+
+        {/* Esqueletos de las dos columnas */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
+          <div className="lg:col-span-5">
+            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-sm p-lg space-y-md">
+              <div className="h-5 w-32 rounded-full bg-surface-container animate-pulse" />
+              <div className="h-11 w-full rounded-xl bg-surface-container animate-pulse" />
+              <div className="h-11 w-full rounded-xl bg-surface-container animate-pulse" />
+              <div className="space-y-sm pt-sm">
+                {[0, 1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-14 w-full rounded-xl bg-surface-container-low animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-7">
+            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-sm p-xl min-h-[28rem] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-md">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary/25 border-t-primary" />
+                <p className="text-body-md font-medium text-on-surface-variant">Cargando panel de seguimiento académico...</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -520,16 +466,25 @@ export function AdminAcademicTracking() {
       {gradingTask && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[28rem] relative overflow-hidden">
-            <div className="h-1 w-full bg-gradient-to-r from-primary via-primary-container to-secondary" />
-            
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-outline-variant">
-              <div>
-                <h3 className="text-title-lg font-bold text-on-surface">Evaluar Actividad</h3>
-                <p className="text-label-sm text-on-surface-variant max-w-[22rem] truncate">{gradingTask.title}</p>
+            <div className="h-1.5 w-full bg-gradient-to-r from-primary via-primary-container to-secondary" />
+
+            <div className="flex items-start justify-between gap-md px-6 pt-5 pb-4 border-b border-outline-variant/40">
+              <div className="flex items-center gap-md min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary grid place-items-center shrink-0">
+                  <Star size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-title-lg font-bold text-on-surface">Evaluar actividad</h3>
+                  <p className="text-label-sm text-on-surface-variant max-w-[18rem] truncate">{gradingTask.title}</p>
+                  {selectedStudent && (
+                    <p className="text-label-sm text-primary font-semibold truncate max-w-[18rem]">{selectedStudent.full_name}</p>
+                  )}
+                </div>
               </div>
               <button 
                 onClick={() => setGradingTask(null)} 
-                className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors shrink-0"
+                aria-label="Cerrar"
               >
                 <X size={18} />
               </button>
@@ -543,8 +498,8 @@ export function AdminAcademicTracking() {
               )}
 
               <div className="space-y-1.5">
-                <label className="text-label-md font-bold text-on-surface flex justify-between">
-                  <span>Nota (Escala 0 - 10)</span>
+                <label className="text-label-md font-bold text-on-surface flex justify-between gap-sm">
+                  <span>Nota (escala 0 - 10)</span>
                   <span className="text-primary font-medium text-label-sm">Decimales permitidos (ej. 8.5)</span>
                 </label>
                 <input
@@ -552,7 +507,7 @@ export function AdminAcademicTracking() {
                   value={scoreInput}
                   onChange={(e) => setScoreInput(e.target.value)}
                   placeholder="Ej: 9.2 (Dejar vacío para borrar calificación)"
-                  className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl text-body-md text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all"
+                  className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
               </div>
 
@@ -563,7 +518,7 @@ export function AdminAcademicTracking() {
                   onChange={(e) => setFeedbackInput(e.target.value)}
                   placeholder="Escribe comentarios sobre la entrega..."
                   rows={4}
-                  className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl text-body-md text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all resize-none"
+                  className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
                 />
               </div>
 
@@ -571,17 +526,17 @@ export function AdminAcademicTracking() {
                 <button 
                   type="button" 
                   onClick={() => setGradingTask(null)} 
-                  className="flex-1 py-3 rounded-xl border border-outline-variant text-on-surface-variant font-bold text-label-md hover:bg-surface-container transition-colors"
+                  className="flex-1 py-3 rounded-xl border border-outline-variant/60 text-on-surface-variant font-bold text-label-md hover:bg-surface-container transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit" 
                   disabled={savingGrade} 
-                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-bold text-label-md hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-bold text-label-md shadow-sm hover:bg-primary-container transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {savingGrade ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
-                  {savingGrade ? "Guardando..." : "Guardar Nota"}
+                  {savingGrade ? "Guardando..." : "Guardar nota"}
                 </button>
               </div>
             </form>
@@ -590,41 +545,72 @@ export function AdminAcademicTracking() {
       )}
 
       {error && (
-        <div className="bg-error/10 border border-error/20 text-error p-lg rounded-xl flex items-start gap-3">
-          <AlertCircle className="shrink-0 mt-0.5" size={20} />
+        <div className="bg-error/10 border border-error/20 text-error p-lg rounded-2xl flex items-start gap-md">
+          <div className="w-10 h-10 rounded-xl bg-error/15 grid place-items-center shrink-0">
+            <AlertCircle size={20} />
+          </div>
           <div>
-            <h4 className="font-bold">Ha ocurrido un error</h4>
+            <h4 className="font-bold text-body-lg">No se pudo cargar el seguimiento</h4>
             <p className="text-body-md mt-xs">{error}</p>
             <button 
               onClick={() => loadTrackingData()} 
-              className="mt-sm bg-error text-white text-label-sm font-bold px-3 py-1.5 rounded-lg hover:bg-error-container transition-colors flex items-center gap-1.5"
+              className="mt-sm bg-error text-on-error text-label-md font-bold px-3.5 py-2 rounded-xl hover:opacity-90 transition-opacity inline-flex items-center gap-1.5"
             >
-              <RefreshCw size={14} /> Reintentar Carga
+              <RefreshCw size={14} /> Reintentar carga
             </button>
           </div>
         </div>
       )}
 
-      {/* Bento Layout Grid */}
+      {/* Resumen general para monitoreo rápido */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-sm md:gap-md">
+        {summaryCards.map(card => (
+          <div
+            key={card.label}
+            className="relative overflow-hidden bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-sm p-md hover:shadow-md transition-shadow"
+          >
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-primary/5" />
+            <div className="relative flex items-center gap-sm">
+              <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 ${card.tone}`}>
+                {card.icon}
+              </div>
+              <span className="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant truncate">
+                {card.label}
+              </span>
+            </div>
+            <div className="relative flex items-baseline gap-xs mt-md">
+              <span className="text-headline-md font-bold text-on-surface tabular-nums">{card.value}</span>
+              <span className="text-label-sm text-on-surface-variant truncate">{card.hint}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Layout principal */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
         
         {/* Left column: Filters & Student list (5 cols on lg) */}
         <div className="lg:col-span-5 space-y-md">
-          <div className="bg-surface rounded-xl shadow-sm border border-outline-variant/30 p-lg space-y-md">
+          <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/40 p-lg space-y-md">
             
-            {/* Search and Refresh Header */}
-            <div className="flex justify-between items-center gap-sm">
-              <h3 className="text-title-lg font-bold text-on-surface">Estudiantes</h3>
+            {/* Encabezado de la lista */}
+            <div className="flex items-center justify-between gap-sm">
+              <div className="min-w-0">
+                <h3 className="text-title-lg font-bold text-on-surface">Estudiantes</h3>
+                <p className="text-label-sm text-on-surface-variant mt-0.5">
+                  Mostrando {filteredStudents.length} de {students.length}
+                </p>
+              </div>
               <button 
                 onClick={() => loadTrackingData()} 
-                className="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors"
+                className="w-9 h-9 grid place-items-center rounded-full text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors shrink-0"
                 title="Sincronizar datos"
               >
                 <RefreshCw size={16} />
               </button>
             </div>
 
-            {/* Search Input */}
+            {/* Buscador */}
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
               <input
@@ -632,134 +618,161 @@ export function AdminAcademicTracking() {
                 placeholder="Buscar por nombre o correo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant/60 rounded-xl text-body-md text-on-surface placeholder:text-on-surface-variant/75 focus:outline-none focus:border-primary transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low border border-outline-variant/50 rounded-xl text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
             </div>
 
-            {/* Filters Row */}
-            <div className="grid grid-cols-2 gap-sm">
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Grado / Sección</span>
-                <select
-                  value={sectionFilter}
-                  onChange={(e) => setSectionFilter(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg text-body-sm font-semibold focus:outline-none"
-                >
-                  <option value="all">Todos ({sections.length})</option>
-                  {sections.map(sec => (
-                    <option key={sec} value={sec}>{sec}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Rendimiento</span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg text-body-sm font-semibold focus:outline-none"
-                >
-                  <option value="all">Cualquiera</option>
-                  <option value="Excelente">Excelente (⭐ &gt;= 8.5)</option>
-                  <option value="Aprobado">Aprobado (👍 &gt;= 5.0)</option>
-                  <option value="En riesgo">En riesgo (⚠️ &lt; 5.0)</option>
-                  <option value="Sin actividad">Sin actividad</option>
-                </select>
-              </div>
+            {/* Filtro por sección */}
+            <div className="space-y-xs">
+              <span className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Grado / Sección</span>
+              <select
+                value={sectionFilter}
+                onChange={(e) => setSectionFilter(e.target.value)}
+                className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/50 rounded-xl text-body-md font-semibold text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              >
+                <option value="all">Todos ({sections.length})</option>
+                {sections.map(sec => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
+              </select>
             </div>
 
-            {/* Sorting Row */}
-            <div className="flex gap-md items-center justify-between pt-1 text-label-sm border-t border-outline-variant/10">
-              <span className="text-on-surface-variant font-medium">Ordenar por:</span>
-              <div className="flex gap-sm">
-                <button 
-                  onClick={() => setSortBy("name")} 
-                  className={`px-2 py-1 rounded font-bold transition-colors ${sortBy === 'name' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-surface-container'}`}
-                >
-                  Nombre
-                </button>
-                <button 
-                  onClick={() => setSortBy("score")} 
-                  className={`px-2 py-1 rounded font-bold transition-colors ${sortBy === 'score' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-surface-container'}`}
-                >
-                  Calificación
-                </button>
-                <button 
-                  onClick={() => setSortBy("progress")} 
-                  className={`px-2 py-1 rounded font-bold transition-colors ${sortBy === 'progress' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-surface-container'}`}
-                >
-                  Progreso
-                </button>
+            {/* Filtro por rendimiento */}
+            <div className="space-y-xs">
+              <span className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Rendimiento</span>
+              <div className="flex flex-wrap gap-xs">
+                {PERFORMANCE_FILTERS.map(option => {
+                  const isActive = statusFilter === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setStatusFilter(option.value)}
+                      aria-pressed={isActive}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-label-sm font-bold border transition-colors ${
+                        isActive
+                          ? "bg-primary text-on-primary border-primary shadow-sm"
+                          : "bg-surface-container-low text-on-surface-variant border-outline-variant/40 hover:border-primary/40 hover:text-on-surface"
+                      }`}
+                    >
+                      {option.dot && <span className={`w-1.5 h-1.5 rounded-full ${option.dot}`} />}
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-label-sm text-on-surface-variant/80">
+                Excelente ≥ 8.5 · Aprobado ≥ 5.0 · En riesgo &lt; 5.0
+              </p>
+            </div>
+
+            {/* Orden */}
+            <div className="flex flex-wrap gap-sm items-center justify-between pt-md border-t border-outline-variant/20">
+              <span className="text-label-sm font-medium text-on-surface-variant">Ordenar por</span>
+              <div className="flex gap-1 bg-surface-container-low rounded-full p-1">
+                {SORT_OPTIONS.map(option => {
+                  const isActive = sortBy === option.key;
+                  return (
+                    <button
+                      key={option.key}
+                      onClick={() => setSortBy(option.key)}
+                      aria-pressed={isActive}
+                      className={`px-3 py-1.5 rounded-full text-label-sm font-bold transition-colors ${
+                        isActive
+                          ? "bg-surface-container-lowest text-primary shadow-sm"
+                          : "text-on-surface-variant hover:text-on-surface"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
           </div>
 
-          {/* Student List */}
-          <div className="bg-surface rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden max-h-[35rem] overflow-y-auto">
+          {/* Lista de estudiantes */}
+          <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/40 overflow-hidden">
             {filteredStudents.length === 0 ? (
               <div className="p-xl text-center">
-                <User size={36} className="mx-auto text-on-surface-variant/40 mb-3" />
-                <p className="text-body-md font-medium text-on-surface-variant">No se encontraron estudiantes.</p>
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-surface-container grid place-items-center mb-md">
+                  <User size={26} className="text-on-surface-variant/60" />
+                </div>
+                <p className="text-body-md font-bold text-on-surface">No se encontraron estudiantes</p>
+                <p className="text-label-md text-on-surface-variant mt-xs">
+                  Ajusta la búsqueda o los filtros para ver resultados.
+                </p>
               </div>
             ) : (
-              <div className="divide-y divide-outline-variant/20">
+              <div className="max-h-[34rem] overflow-y-auto p-sm space-y-xs">
                 {filteredStudents.map(student => {
                   const isSelected = selectedStudent?.id === student.id;
                   const progressPercentage = student.stats.totalTasks > 0 
                     ? Math.round((student.stats.completedTasks / student.stats.totalTasks) * 100) 
                     : 0;
+                  const tone = PERFORMANCE_STYLES[student.stats.performance];
+                  const scoreTone = student.stats.averageScore >= 8.5
+                    ? "bg-secondary-container/30 text-secondary"
+                    : student.stats.averageScore >= 5.0
+                    ? "bg-primary/10 text-primary"
+                    : "bg-error/10 text-error";
 
                   return (
-                    <div 
+                    <button
                       key={student.id}
                       onClick={() => handleSelectStudent(student)}
-                      className={`p-md hover:bg-surface-container-low transition-colors cursor-pointer flex items-center justify-between gap-md relative border-l-4 ${isSelected ? 'bg-surface-container border-primary' : 'border-transparent'}`}
+                      className={`w-full text-left p-sm md:p-md rounded-xl border flex items-center gap-md transition-all ${
+                        isSelected
+                          ? "bg-primary/5 border-primary/40 shadow-sm"
+                          : "border-transparent hover:bg-surface-container-low hover:border-outline-variant/30"
+                      }`}
                     >
-                      <div className="flex items-center gap-md min-w-0">
-                        {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0">
-                          {student.full_name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-label-md font-bold text-on-surface truncate">{student.full_name}</h4>
-                          <p className="text-label-sm text-on-surface-variant truncate">{student.email}</p>
-                          <div className="flex gap-2 items-center mt-1">
-                            {student.courseSection && (
-                              <span className="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded">
-                                {student.courseSection}
-                              </span>
-                            )}
-                            <span className="text-[10px] font-medium text-on-surface-variant">
-                              {student.stats.completedTasks} / {student.stats.totalTasks} tareas
+                      {/* Avatar con color según rendimiento */}
+                      <div className={`w-10 h-10 rounded-full grid place-items-center font-bold shrink-0 ${tone.chip}`}>
+                        {student.full_name.charAt(0).toUpperCase()}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-label-md font-bold text-on-surface truncate">{student.full_name}</h4>
+                        <p className="text-label-sm text-on-surface-variant truncate">{student.email}</p>
+                        <div className="flex flex-wrap items-center gap-xs mt-1">
+                          {student.courseSection && (
+                            <span className="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full">
+                              {student.courseSection}
                             </span>
-                          </div>
+                          )}
+                          <span className="text-[10px] font-medium text-on-surface-variant">
+                            {student.stats.completedTasks} / {student.stats.totalTasks} tareas
+                          </span>
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${tone.chip}`}>
+                            <span className={`w-1 h-1 rounded-full ${tone.dot}`} />
+                            {student.stats.performance}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Score Badge & Progress indicator */}
+                      {/* Nota y avance */}
                       <div className="flex flex-col items-end shrink-0 gap-sm">
                         {student.stats.completedTasks > 0 ? (
-                          <span className={`inline-flex items-center gap-0.5 font-bold text-label-md px-2 py-0.5 rounded-full ${
-                            student.stats.averageScore >= 8.5 
-                              ? 'bg-secondary-container/20 text-secondary' 
-                              : student.stats.averageScore >= 5.0 
-                              ? 'bg-primary-container/20 text-primary' 
-                              : 'bg-error/10 text-error'
-                          }`}>
+                          <span className={`inline-flex items-center gap-0.5 font-bold text-label-md px-2 py-0.5 rounded-full tabular-nums ${scoreTone}`}>
                             <Star size={12} fill="currentColor" /> {student.stats.averageScore}
                           </span>
                         ) : (
-                          <span className="text-label-sm font-semibold text-on-surface-variant/40">Sin notas</span>
+                          <span className="text-label-sm font-semibold text-on-surface-variant/50">Sin notas</span>
                         )}
-                        <div className="w-14 bg-surface-container-high rounded-full h-1 overflow-hidden">
+                        <div className="w-16 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
                           <div 
-                            className="bg-primary h-full rounded-full" 
+                            className={`h-full rounded-full transition-all ${tone.dot}`}
                             style={{ width: `${progressPercentage}%` }} 
                           />
                         </div>
                       </div>
-                    </div>
+
+                      <ChevronRight
+                        size={16}
+                        className={`shrink-0 transition-transform ${isSelected ? "text-primary translate-x-0.5" : "text-on-surface-variant/40"}`}
+                      />
+                    </button>
                   );
                 })}
               </div>
@@ -767,197 +780,239 @@ export function AdminAcademicTracking() {
           </div>
         </div>
 
-        {/* Right column: Student details dashboard (7 cols on lg) */}
+        {/* Detalle del estudiante (7 col en lg) */}
         <div className="lg:col-span-7">
           {!selectedStudent ? (
-            <div className="bg-surface rounded-xl shadow-sm border border-outline-variant/30 p-xl flex flex-col items-center justify-center text-center min-h-[30rem] relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
-              <BookOpen size={64} className="text-primary/20 mb-lg" />
-              <h3 className="text-headline-md font-bold text-on-surface mb-xs">Consola de Seguimiento</h3>
-              <p className="text-body-md text-on-surface-variant max-w-[22rem]">
-                Selecciona un estudiante de la lista de la izquierda para analizar su progreso académico, ver tareas y calificar actividades.
+            <div className="relative overflow-hidden bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/40 p-xl flex flex-col items-center justify-center text-center min-h-[30rem]">
+              <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+              <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-gradient-to-tr from-secondary/10 to-transparent" />
+              <div className="relative w-20 h-20 rounded-3xl bg-primary/10 text-primary grid place-items-center mb-lg">
+                <BookOpen size={36} />
+              </div>
+              <h3 className="relative text-headline-md font-bold text-on-surface mb-xs">Consola de seguimiento</h3>
+              <p className="relative text-body-md text-on-surface-variant max-w-[24rem]">
+                Selecciona un estudiante de la lista para analizar su progreso, revisar sus actividades y calificarlas.
               </p>
+              <div className="relative mt-lg flex flex-wrap items-center justify-center gap-sm">
+                <span className="inline-flex items-center gap-1.5 text-label-sm font-bold px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant border border-outline-variant/40">
+                  <FileText size={14} /> Revisa sus entregas
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-label-sm font-bold px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant border border-outline-variant/40">
+                  <Star size={14} /> Califica en un clic
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-label-sm font-bold px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant border border-outline-variant/40">
+                  <AlertTriangle size={14} /> Detecta casos en riesgo
+                </span>
+              </div>
             </div>
           ) : (
             <div className="space-y-lg">
               
-              {/* Detailed Student Header Card */}
-              <div className="bg-surface rounded-xl shadow-sm p-lg flex flex-col sm:flex-row items-center sm:items-start gap-lg relative overflow-hidden border border-outline-variant/30">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
-                <div className="w-20 h-20 rounded-full bg-primary text-on-primary text-display-sm font-extrabold flex items-center justify-center shadow-sm border border-surface">
+              {/* Encabezado del estudiante */}
+              <div className="relative overflow-hidden bg-surface-container-lowest rounded-2xl shadow-sm p-lg flex flex-col sm:flex-row items-center sm:items-start gap-lg border border-outline-variant/40">
+                <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+                <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary text-headline-md font-extrabold flex items-center justify-center shadow-md shrink-0">
                   {selectedStudent.full_name.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1 text-center sm:text-left z-10">
-                  <h3 className="text-headline-md font-bold text-on-surface">{selectedStudent.full_name}</h3>
+                <div className="relative flex-1 text-center sm:text-left min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-sm justify-center sm:justify-start">
+                    <h3 className="text-headline-md font-bold text-on-surface truncate">{selectedStudent.full_name}</h3>
+                    <span className={`inline-flex self-center items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full ${PERFORMANCE_STYLES[selectedStudent.stats.performance].chip}`}>
+                      <span className={`w-1 h-1 rounded-full ${PERFORMANCE_STYLES[selectedStudent.stats.performance].dot}`} />
+                      {selectedStudent.stats.performance}
+                    </span>
+                  </div>
                   <p className="text-body-md text-on-surface-variant font-medium mt-0.5">
                     {selectedStudent.courseSection ? `${selectedStudent.courseSection} - Educación Secundaria` : 'Sección no asignada'}
                   </p>
-                  <p className="text-label-sm text-on-surface-variant/80 mt-1">{selectedStudent.email}</p>
+                  <p className="text-label-sm text-on-surface-variant/80 mt-1 truncate">{selectedStudent.email}</p>
                   
-                  {/* Courses enrolled list in header */}
+                  {/* Asignaturas matriculadas */}
                   <div className="mt-md flex flex-wrap gap-sm justify-center sm:justify-start">
                     {selectedStudent.courses.length === 0 ? (
-                      <span className="text-[11px] font-bold text-error bg-error/10 px-2 py-0.5 rounded">
+                      <span className="text-label-sm font-bold text-error bg-error/10 px-2.5 py-1 rounded-full">
                         No matriculado en asignaturas
                       </span>
                     ) : (
                       selectedStudent.courses.map(c => (
-                        <span key={c.id} className="text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-md">
+                        <span key={c.id} className="text-[10px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">
                           {c.name}
                         </span>
                       ))
                     )}
                   </div>
                 </div>
-
-                <div className="z-10 flex flex-col gap-sm w-full sm:w-auto mt-2 sm:mt-0 shrink-0">
-                  <button 
-                    onClick={() => handleGenerateTestData(selectedStudent)}
-                    className="border border-outline hover:bg-surface-container text-on-surface font-bold text-label-sm px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <Plus size={16} /> Generar Datos Ficticios
-                  </button>
-                </div>
               </div>
 
               {loadingDetails ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-3 bg-surface rounded-xl border border-outline-variant/30">
-                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-primary border-t-transparent"></div>
-                  <p className="text-on-surface-variant font-medium text-body-sm">Cargando actividades del estudiante...</p>
+                <div className="flex flex-col items-center justify-center py-20 gap-md bg-surface-container-lowest rounded-2xl border border-outline-variant/40">
+                  <div className="animate-spin rounded-full h-9 w-9 border-4 border-primary/25 border-t-primary"></div>
+                  <p className="text-on-surface-variant font-medium text-body-md">Cargando actividades del estudiante...</p>
                 </div>
               ) : (
                 <>
-                  {/* KPIs Bento Grid */}
+                  {/* Indicadores del estudiante */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-                    
-                    {/* KPI Tareas */}
-                    <div className="bg-surface rounded-xl shadow-sm p-md flex items-center gap-md border border-outline-variant/30 hover:shadow-md transition-shadow">
-                      <div className="p-3 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                        <FileText size={24} />
-                      </div>
-                      <div>
-                        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Tareas Entregadas</span>
-                        <div className="flex items-baseline gap-xs mt-0.5">
-                          <span className="text-title-xl font-bold text-on-surface">{selectedStudent.stats.completedTasks}</span>
-                          <span className="text-label-sm text-on-surface-variant">/ {selectedStudent.stats.totalTasks}</span>
+
+                    {/* Entregas */}
+                    <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-md border border-outline-variant/40 hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between gap-sm">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary grid place-items-center shrink-0">
+                          <FileText size={20} />
                         </div>
+                        <span className="text-label-sm font-semibold text-on-surface-variant">{selectedStudent.stats.totalTasks} asignadas</span>
+                      </div>
+                      <p className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider mt-md">Tareas entregadas</p>
+                      <div className="flex items-baseline gap-xs">
+                        <span className="text-headline-md font-bold text-on-surface tabular-nums">{selectedStudent.stats.completedTasks}</span>
+                        <span className="text-label-md text-on-surface-variant">de {selectedStudent.stats.totalTasks}</span>
+                      </div>
+                      <div className="mt-sm h-1.5 rounded-full bg-surface-container-high overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${selectedStudent.stats.totalTasks > 0 ? Math.round((selectedStudent.stats.completedTasks / selectedStudent.stats.totalTasks) * 100) : 0}%` }}
+                        />
                       </div>
                     </div>
 
-                    {/* KPI Promedio */}
-                    <div className="bg-surface rounded-xl shadow-sm p-md flex items-center gap-md border border-outline-variant/30 hover:shadow-md transition-shadow">
-                      <div className="p-3 bg-secondary-container/20 rounded-xl flex items-center justify-center text-secondary shrink-0">
-                        <Trophy size={24} />
-                      </div>
-                      <div>
-                        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Promedio General</span>
-                        <div className="flex items-baseline gap-xs mt-0.5">
-                          <span className="text-title-xl font-bold text-on-surface">
-                            {selectedStudent.stats.completedTasks > 0 ? selectedStudent.stats.averageScore : "-"}
-                          </span>
-                          <span className="text-label-sm text-on-surface-variant">/ 10</span>
+                    {/* Promedio */}
+                    <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-md border border-outline-variant/40 hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between gap-sm">
+                        <div className="w-10 h-10 rounded-xl bg-secondary-container/30 text-secondary grid place-items-center shrink-0">
+                          <Trophy size={20} />
                         </div>
+                        <span className="text-label-sm font-semibold text-on-surface-variant">/ 10</span>
+                      </div>
+                      <p className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider mt-md">Promedio general</p>
+                      <div className="flex items-baseline gap-xs">
+                        <span className="text-headline-md font-bold text-on-surface tabular-nums">
+                          {selectedStudent.stats.completedTasks > 0 ? selectedStudent.stats.averageScore : "—"}
+                        </span>
+                        <span className="text-label-md text-on-surface-variant">según actividades revisadas</span>
                       </div>
                     </div>
 
-                    {/* KPI Pendientes */}
-                    <div className="bg-surface rounded-xl shadow-sm p-md flex items-center gap-md border border-outline-variant/30 hover:shadow-md transition-shadow">
-                      <div className={`p-3 rounded-xl flex items-center justify-center shrink-0 ${
-                        selectedStudent.stats.pendingReviews > 0 
-                          ? 'bg-amber-100 text-amber-600' 
-                          : 'bg-green-100 text-green-600'
-                      }`}>
-                        {selectedStudent.stats.pendingReviews > 0 ? <Clock size={24} /> : <CheckCircle2 size={24} />}
-                      </div>
-                      <div>
-                        <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Por Calificar</span>
-                        <div className="flex items-baseline gap-xs mt-0.5">
-                          <span className="text-title-xl font-bold text-on-surface">{selectedStudent.stats.pendingReviews}</span>
-                          <span className="text-label-sm text-on-surface-variant">pendientes</span>
+                    {/* Por calificar */}
+                    <div className="bg-surface-container-lowest rounded-2xl shadow-sm p-md border border-outline-variant/40 hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between gap-sm">
+                        <div className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${
+                          selectedStudent.stats.pendingReviews > 0
+                            ? 'bg-amber-400/20 text-amber-600 dark:text-amber-300'
+                            : 'bg-secondary-container/30 text-secondary'
+                        }`}>
+                          {selectedStudent.stats.pendingReviews > 0 ? <Clock size={20} /> : <CheckCircle2 size={20} />}
                         </div>
+                        <span className="text-label-sm font-semibold text-on-surface-variant">
+                          {selectedStudent.stats.pendingReviews === 0 ? "Al día" : "Requiere revisión"}
+                        </span>
+                      </div>
+                      <p className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider mt-md">Por calificar</p>
+                      <div className="flex items-baseline gap-xs">
+                        <span className="text-headline-md font-bold text-on-surface tabular-nums">{selectedStudent.stats.pendingReviews}</span>
+                        <span className="text-label-md text-on-surface-variant">
+                          {selectedStudent.stats.pendingReviews === 1 ? "entrega pendiente" : "entregas pendientes"}
+                        </span>
                       </div>
                     </div>
 
                   </div>
 
                   {/* Tasks and Submissions Table */}
-                  <div className="bg-surface rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden">
-                    <div className="p-lg border-b border-outline-variant/50 flex justify-between items-center bg-surface-container-low">
-                      <h4 className="text-title-md font-bold text-on-surface">Tareas & Calificaciones</h4>
-                      <span className="text-label-sm font-semibold bg-primary/10 text-primary px-3 py-1 rounded-full">
-                        {studentTasks.length} Tareas Totales
+                  <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/40 overflow-hidden">
+                    <div className="px-lg py-md border-b border-outline-variant/30 flex flex-wrap justify-between items-center gap-sm bg-surface-container-low/60">
+                      <div className="flex items-center gap-sm">
+                        <div className="w-9 h-9 rounded-xl bg-secondary-container/30 text-secondary grid place-items-center shrink-0">
+                          <FileText size={18} />
+                        </div>
+                        <div>
+                          <h4 className="text-title-lg font-bold text-on-surface">Tareas &amp; calificaciones</h4>
+                          <p className="text-label-sm text-on-surface-variant">Califica o edita la nota de cada actividad</p>
+                        </div>
+                      </div>
+                      <span className="text-label-sm font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">
+                        {studentTasks.length} {studentTasks.length === 1 ? "tarea" : "tareas"}
                       </span>
                     </div>
 
                     {studentTasks.length === 0 ? (
                       <div className="p-xl text-center">
-                        <FileText size={48} className="mx-auto text-on-surface-variant/30 mb-lg" />
-                        <h5 className="font-bold text-on-surface mb-xs">Sin tareas asignadas</h5>
-                        <p className="text-body-md text-on-surface-variant max-w-[20rem] mx-auto">
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-surface-container grid place-items-center mb-md">
+                          <FileText size={26} className="text-on-surface-variant/60" />
+                        </div>
+                        <h5 className="font-bold text-on-surface text-body-lg">Sin tareas asignadas</h5>
+                        <p className="text-body-md text-on-surface-variant max-w-[22rem] mx-auto mt-xs">
                           Este estudiante no tiene tareas programadas porque su sección no cuenta con asignaturas o tareas creadas.
                         </p>
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full min-w-[42rem] text-left border-collapse">
                           <thead>
-                            <tr className="bg-surface-container-low border-b border-outline-variant/40">
-                              <th className="px-lg py-md text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Actividad</th>
-                              <th className="px-lg py-md text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Materia</th>
-                              <th className="px-lg py-md text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Fecha Límite</th>
-                              <th className="px-lg py-md text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Nota</th>
-                              <th className="px-lg py-md text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-center">Estado</th>
-                              <th className="px-lg py-md text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-center">Acción</th>
+                            <tr className="bg-surface-container-low/40 border-b border-outline-variant/30">
+                              <th className="px-lg py-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Actividad</th>
+                              <th className="px-lg py-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Materia</th>
+                              <th className="px-lg py-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Fecha límite</th>
+                              <th className="px-lg py-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider text-right">Nota</th>
+                              <th className="px-lg py-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider text-center">Estado</th>
+                              <th className="px-lg py-md text-label-sm font-bold text-on-surface-variant uppercase tracking-wider text-center">Acción</th>
                             </tr>
                           </thead>
                           <tbody className="text-body-md text-on-surface divide-y divide-outline-variant/15">
-                            {studentTasks.map((t, idx) => {
-                              // Color code status badges
-                              let statusClass = "bg-surface-container-high text-on-surface-variant";
+                            {studentTasks.map(t => {
+                              let statusClass = "bg-surface-container text-on-surface-variant";
+                              let statusDot = "bg-outline";
                               let statusLabel = "No entregado";
                               
                               if (t.status === "reviewed") {
-                                statusClass = "bg-secondary-container/20 text-secondary";
+                                statusClass = "bg-secondary-container/30 text-on-secondary-container";
+                                statusDot = "bg-secondary";
                                 statusLabel = "Revisado";
                               } else if (t.status === "pending") {
-                                statusClass = "bg-amber-100 text-amber-700";
+                                statusClass = "bg-amber-400/20 text-amber-700 dark:text-amber-300";
+                                statusDot = "bg-amber-500";
                                 statusLabel = "Por revisar";
                               }
 
                               return (
-                                <tr key={t.id} className="hover:bg-surface-container-lowest transition-colors">
+                                <tr key={t.id} className="hover:bg-surface-container-low/60 transition-colors">
                                   <td className="px-lg py-md">
                                     <div className="font-bold text-on-surface">{t.title}</div>
-                                    <span className="text-[10px] font-bold bg-secondary-container/30 text-on-secondary-container px-2 py-0.5 rounded uppercase">
-                                      {t.task_type === 'homework' ? 'Tarea' : t.task_type === 'forum' ? 'Foro' : t.task_type === 'exam' ? 'Examen' : t.task_type}
-                                    </span>
-                                    {t.feedback && (
-                                      <p className="text-label-sm text-on-surface-variant italic mt-1 max-w-[15rem] truncate" title={t.feedback}>
-                                        &ldquo;{t.feedback}&rdquo;
-                                      </p>
-                                    )}
+                                    <div className="flex flex-wrap items-center gap-sm mt-1">
+                                      <span className="text-[10px] font-bold bg-secondary-container/30 text-on-secondary-container px-2 py-0.5 rounded-full uppercase">
+                                        {t.task_type === 'homework' ? 'Tarea' : t.task_type === 'forum' ? 'Foro' : t.task_type === 'exam' ? 'Examen' : t.task_type}
+                                      </span>
+                                      {t.feedback && (
+                                        <p className="text-label-sm text-on-surface-variant italic max-w-[16rem] truncate" title={t.feedback}>
+                                          &ldquo;{t.feedback}&rdquo;
+                                        </p>
+                                      )}
+                                    </div>
                                   </td>
                                   <td className="px-lg py-md text-on-surface-variant font-medium">
                                     {t.courseName}
                                   </td>
-                                  <td className="px-lg py-md text-on-surface-variant text-label-md font-medium whitespace-nowrap">
-                                    {t.due_date ? new Date(t.due_date).toLocaleDateString("es-ES", { day: "numeric", month: "short" }) : 'Sin límite'}
+                                  <td className="px-lg py-md text-on-surface-variant whitespace-nowrap">
+                                    <span className="inline-flex items-center gap-1.5 text-label-md font-medium">
+                                      <Calendar size={13} className="opacity-70" />
+                                      {t.due_date ? new Date(t.due_date).toLocaleDateString("es-ES", { day: "numeric", month: "short" }) : 'Sin límite'}
+                                    </span>
                                   </td>
-                                  <td className="px-lg py-md text-right font-extrabold text-on-surface">
+                                  <td className="px-lg py-md text-right font-extrabold text-on-surface tabular-nums">
                                     {t.score !== null ? t.score.toFixed(1) : "-"}
                                   </td>
                                   <td className="px-lg py-md text-center">
-                                    <span className={`inline-block px-3 py-1 rounded-full text-label-sm font-bold ${statusClass}`}>
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-bold ${statusClass}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
                                       {statusLabel}
                                     </span>
                                   </td>
                                   <td className="px-lg py-md text-center">
                                     <button 
                                       onClick={() => handleOpenGrading(t)}
-                                      className="p-2 hover:bg-surface-container-high rounded-full text-primary hover:text-primary-container transition-colors inline-flex items-center gap-1 font-bold text-label-sm"
-                                      title={t.score !== null ? "Editar Calificación" : "Calificar"}
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-label-sm hover:bg-primary hover:text-on-primary transition-colors"
+                                      title={t.score !== null ? "Editar calificación" : "Calificar"}
                                     >
-                                      <Edit3 size={16} />
+                                      <Edit3 size={14} /> {t.score !== null ? "Editar" : "Calificar"}
                                     </button>
                                   </td>
                                 </tr>

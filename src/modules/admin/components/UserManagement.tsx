@@ -358,6 +358,7 @@ function EditUserModal({
               <option value="student">Estudiante</option>
               <option value="teacher">Docente</option>
               <option value="admin">Administrador</option>
+              {user.role === 'parent' && <option value="parent">Padre de familia</option>}
             </select>
           </div>
 
@@ -447,6 +448,7 @@ function ViewUserModal({
     switch (role) {
       case 'admin': return 'Administrador';
       case 'teacher': return 'Docente';
+      case 'parent': return 'Padre de familia';
       default: return 'Estudiante';
     }
   };
@@ -1280,6 +1282,7 @@ export function UserManagement() {
     switch(role) {
       case 'admin': return { label: 'Administrador', classes: 'bg-[#EEF2FF] text-[#4F46E5] border-[#C7D2FE]' };
       case 'teacher': return { label: 'Docente', classes: 'bg-[#F0FDFA] text-[#0F766E] border-[#99F6E4]' };
+      case 'parent': return { label: 'Padre de familia', classes: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800' };
       default: return { label: 'Estudiante', classes: 'bg-surface-container text-on-surface border-outline-variant' };
     }
   };
@@ -1447,6 +1450,7 @@ export function UserManagement() {
             { id: "admin", label: "Administradores", count: users.filter(u => u.role === "admin").length, activeColor: "text-indigo-600 border-indigo-600 dark:text-indigo-400 dark:border-indigo-400", badgeColor: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300", borderBg: "bg-indigo-600 dark:bg-indigo-400" },
             { id: "teacher", label: "Docentes", count: users.filter(u => u.role === "teacher").length, activeColor: "text-teal-600 border-teal-600 dark:text-teal-400 dark:border-teal-400", badgeColor: "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300", borderBg: "bg-teal-600 dark:bg-teal-400" },
             { id: "student", label: "Estudiantes", count: users.filter(u => u.role === "student").length, activeColor: "text-sky-600 border-sky-600 dark:text-sky-400 dark:border-sky-400", badgeColor: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300", borderBg: "bg-sky-600 dark:bg-sky-400" },
+            { id: "parent", label: "Padres", count: users.filter(u => u.role === "parent").length, activeColor: "text-violet-600 border-violet-600 dark:text-violet-400 dark:border-violet-400", badgeColor: "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300", borderBg: "bg-violet-600 dark:bg-violet-400" },
           ].map((tab) => {
             const active = roleFilter === tab.id;
             return (
@@ -1454,6 +1458,10 @@ export function UserManagement() {
                 key={tab.id}
                 onClick={() => {
                   setRoleFilter(tab.id);
+                  if (tab.id !== 'student') {
+                    setGradeFilter("");
+                    setSectionFilter("");
+                  }
                   setSelectedUserIds(new Set()); // Reset selections on tab change
                 }}
                 className={`px-6 pb-3 pt-2 font-bold text-label-md transition-all relative flex items-center gap-2 outline-none whitespace-nowrap cursor-pointer ${
