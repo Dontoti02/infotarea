@@ -7,20 +7,16 @@ import {
   BookOpen, 
   FileCheck, 
   Clock, 
-  AlertCircle, 
   CheckCircle2, 
   MessageSquare, 
   UserPlus, 
   Award, 
   Calendar, 
-  ChevronRight, 
   Loader2,
-  TrendingUp,
-  Sparkles,
-  Search,
-  ExternalLink
+  TrendingUp
 } from "lucide-react";
 import { ParentLayout } from "@/modules/parent/components/ParentLayout";
+import { ParentSmartAlerts } from "@/modules/smart";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { requestCommunicationJson } from "@/shared/utils/communication";
@@ -281,6 +277,11 @@ export default function ParentDashboardPage() {
           </div>
         </div>
 
+        {/* Avisos del componente inteligente para el hijo activo (ítems 22–23) */}
+        {!activeChild.verificationPending && (
+          <ParentSmartAlerts key={activeChild.id} studentId={activeChild.id} />
+        )}
+
         {/* Top KPI Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Calificación promedio */}
@@ -376,18 +377,18 @@ export default function ParentDashboardPage() {
 
         {/* View Navigation Tabs */}
         <div className="border-b border-outline-variant/20 flex items-center gap-2 overflow-x-auto">
-          {[
+          {([
             { id: "resumen", label: "Resumen General", icon: TrendingUp },
             { id: "calificaciones", label: "Calificaciones", icon: Award },
             { id: "tareas", label: "Tareas y Asignaciones", icon: FileCheck },
             { id: "docentes", label: "Docentes y Cursos", icon: Users },
-          ].map((tab) => {
+          ] as const).map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-4 border-b-2 font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
                   isActive
                     ? "border-primary text-primary"

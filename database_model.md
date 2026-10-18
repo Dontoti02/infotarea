@@ -272,3 +272,65 @@ Habilitación progresiva del flujo familiar Estudiante-Padre.
 *   **`status`** (`TEXT`): Estado (`pending`, `linked`, `active`).
 *   **`share_grades`** / **`share_tasks`** (`BOOLEAN`): Alcance de visibilidad otorgado.
 
+---
+
+## 🧠 Entidades de Priorización, Alertas y Correo (Iteración Nº 4)
+
+### 10. `notification_rules` (Ítem 21)
+Reglas configurables por la dirección para la generación de avisos: ventanas de anticipación y umbrales de riesgo.
+*   **`rule_key`** (`TEXT`, Llave Primaria): Tipo de alerta (`task_due_soon`, `task_overdue`, `submission_pending_review`, `student_at_risk`, `weekly_summary`).
+*   **`label`** / **`description`** (`TEXT`): Nombre y explicación visibles en la plataforma.
+*   **`enabled`** (`BOOLEAN`, Por defecto `true`): Activa o apaga la generación de ese aviso.
+*   **`config`** (`JSONB`): Parámetros de la regla (`hours`, `average`, `overdue`).
+*   **`updated_at`** (`TIMESTAMPTZ`): Última modificación.
+
+### 11. `email_settings` (Ítem 23)
+Cuenta de correo saliente de la institución (una sola fila, `id = true`). Nunca guarda la contraseña.
+*   **`id`** (`BOOLEAN`, Llave Primaria): Fila única forzada con `CHECK (id)`.
+*   **`enabled`** (`BOOLEAN`): Interruptor "Enviar correos".
+*   **`smtp_host`** / **`smtp_port`** / **`smtp_security`** (`TEXT`/`INTEGER`/`TEXT`): Servidor, puerto y cifrado (`tls`, `ssl`, `none`).
+*   **`smtp_user`** / **`from_email`** / **`from_name`** / **`reply_to`** (`TEXT`): Credenciales de envío y remitente visible.
+*   **`alert_config`** (`JSONB`): Qué tipos de alerta se envían por correo.
+*   **`updated_by`** (`UUID`): Referencia a `perfiles(id)`.
+
+### 12. `email_secrets` (Ítem 23)
+Contraseña de aplicación SMTP. RLS habilitado **sin políticas**: solo la clave de servicio o una conexión directa de confianza puede leerla; nunca llega al navegador.
+*   **`id`** (`BOOLEAN`, Llave Primaria): Fila única forzada con `CHECK (id)`.
+*   **`smtp_password`** (`TEXT`): Contraseña de aplicación (se guarda sin espacios).
+*   **`updated_at`** (`TIMESTAMPTZ`): Última modificación.
+
+### 13. `email_log` (Ítem 23)
+Bitácora de envíos de correo (pruebas y alertas) para auditoría y diagnóstico.
+*   **`id`** (`UUID`, Llave Primaria): Identificador único.
+*   **`alert_ids`** (`UUID[]`): Alertas incluidas en el envío.
+*   **`to_email`** / **`subject`** (`TEXT`): Destinatario y asunto.
+*   **`kind`** (`TEXT`): `test`, `alert_digest`, `weekly_summary` o `password_reset`.
+*   **`status`** (`TEXT`): `sent` o `failed`.
+*   **`error_message`** / **`provider_message_id`** (`TEXT`, Opcional): Diagnóstico del proveedor.
+*   **`created_at`** (`TIMESTAMPTZ`): Fecha del envío.
+
+### 14. `smart_alerts` (Ítems 21–23)
+Alertas inteligentes generadas por el motor de reglas; visibles en la plataforma y enviadas por correo cuando está activo.
+*   **`id`** (`UUID`, Llave Primaria): Identificador único.
+*   **`alert_type`** (`TEXT`): Tipo de aviso (ver `notification_rules`).
+*   **`severity`** (`TEXT`): `critica`, `alta`, `media` o `informativa`.
+*   **`title`** / **`message`** (`TEXT`): Texto visible para el usuario.
+*   **`student_id`** / **`task_id`** / **`course_id`** (`UUID`, Opcional): Referencias a `perfiles(id)`, `tareas(id)` y `cursos(id)`.
+*   **`metadata`** (`JSONB`): Datos de apoyo (estudiantes pendientes, promedio, semana, etc.).
+*   **`dedupe_key`** (`TEXT`, Único): Clave que impide avisos repetidos (`overdue:<tarea>`, `due_soon:<tarea>:<día>`, `at_risk:<estudiante>:<semana>`, …).
+*   **`status`** (`TEXT`): `pending`, `sent`, `failed` o `read`.
+*   **`email_status`** (`TEXT`): `not_sent`, `sent` o `failed`.
+*   **`sent_at`** / **`created_at`** / **`updated_at`** (`TIMESTAMPTZ`): Trazabilidad del aviso.
+
+> Políticas RLS: la dirección gestiona todo; los docentes ven las alertas de sus cursos y de sus estudiantes; los estudiantes solo ven las propias.
+
+### 15. `password_reset_requests` (Ítem 23 ampliado)
+Auditoría y control de abuso de la recuperación de contraseña desde el inicio de sesión. Nunca guarda el token ni la contraseña.
+*   **`id`** (`UUID`, Llave Primaria): Identificador único.
+*   **`email`** (`TEXT`): Correo que solicitó el enlace (en minúsculas).
+*   **`requester_hash`** (`TEXT`, Opcional): Hash no reversible del solicitante (IP) para limitar el abuso sin almacenar la dirección real.
+*   **`delivered_via`** (`TEXT`): `app_smtp` (cuenta Gmail de la institución), `supabase_auth` (correo estándar de respaldo) o `skipped`.
+*   **`created_at`** (`TIMESTAMPTZ`): Fecha de la solicitud.
+
+> Políticas RLS: habilitado **sin políticas** (igual que `email_secrets`): la fila solo se escribe desde el servidor con acceso elevado. Límite operativo: 3 solicitudes por correo y 10 por solicitante cada hora.
+

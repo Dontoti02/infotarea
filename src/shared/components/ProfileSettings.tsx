@@ -8,6 +8,7 @@ import {
   User as UserIcon
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { PROFILE_BUCKET, buildAvatarPath, storagePathFromPublicUrl } from "@/shared/utils/storage";
 
 type TabId = "perfil" | "cuenta" | "notificaciones" | "seguridad";
 
@@ -34,10 +35,20 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "seguridad",      label: "Seguridad"      },
 ];
 
+/** Fila de `profiles` usada por la configuración de cualquier rol. */
+interface ProfileRow {
+  id: string;
+  full_name: string | null;
+  role: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  updated_at?: string | null;
+}
+
 export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("perfil");
 
-  const [profile, setProfile]     = useState<any>(null);
+  const [profile, setProfile]     = useState<ProfileRow | null>(null);
   const [email, setEmail]         = useState("");
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
@@ -91,8 +102,11 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
     loadProfile();
 
     if (typeof window !== "undefined") {
+      // El tema se lee del DOM una sola vez al montar la página.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDarkMode(document.documentElement.classList.contains("dark"));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
@@ -129,22 +143,38 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file || !profile) return;
+    if (!file.type.startsWith("image/")) {
+      setProfileMsg({ type: "error", text: "Selecciona una imagen válida (JPG, PNG, etc.)." });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileMsg({ type: "error", text: "La imagen no debe superar los 5 MB." });
+      return;
+    }
     setUploadingAvatar(true);
     setProfileMsg(null);
-    const fileExt = file.name.split(".").pop();
-    const filePath = `${profile.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage.from("img_perfiles").upload(filePath, file);
+    const filePath = buildAvatarPath(profile.id, file.name);
+    if (!filePath) {
+      setProfileMsg({ type: "error", text: "No se pudo preparar la imagen." });
+      setUploadingAvatar(false);
+      return;
+    }
+    const { error: uploadError } = await supabase.storage.from(PROFILE_BUCKET).upload(filePath, file);
     if (uploadError) {
       setProfileMsg({ type: "error", text: "Error al subir imagen: " + uploadError.message });
       setUploadingAvatar(false);
       return;
     }
-    const { data: { publicUrl } } = supabase.storage.from("img_perfiles").getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from(PROFILE_BUCKET).getPublicUrl(filePath);
+    const previousPath = storagePathFromPublicUrl(profile.avatar_url, PROFILE_BUCKET);
     const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
     if (updateError) {
       setProfileMsg({ type: "error", text: "Error al actualizar foto: " + updateError.message });
     } else {
+      // Limpieza opcional: borra la foto anterior si vivía en el mismo bucket.
+      if (previousPath) await supabase.storage.from(PROFILE_BUCKET).remove([previousPath]);
       setProfileMsg({ type: "success", text: "Foto de perfil actualizada." });
       setProfile({ ...profile, avatar_url: publicUrl });
     }
@@ -175,8 +205,8 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
         setEmailMsg({ type: "success", text: "Se envió un enlace de confirmación al nuevo correo. Revisa tu bandeja." });
         setNewEmail(""); setConfirmEmail("");
       }
-    } catch (err: any) {
-      setEmailMsg({ type: "error", text: "Error: " + (err.message || "No se pudo actualizar el correo") });
+    } catch (err) {
+      setEmailMsg({ type: "error", text: "Error: " + (err instanceof Error ? err.message : "No se pudo actualizar el correo") });
     } finally {
       setUpdatingEmail(false);
     }
@@ -216,8 +246,8 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
         setPasswordMsg({ type: "success", text: "¡Contraseña actualizada correctamente!" });
         setNewPassword(""); setConfirmPassword("");
       }
-    } catch (err: any) {
-      setPasswordMsg({ type: "error", text: "Error: " + (err.message || "No se pudo actualizar la contraseña") });
+    } catch (err) {
+      setPasswordMsg({ type: "error", text: "Error: " + (err instanceof Error ? err.message : "No se pudo actualizar la contraseña") });
     } finally {
       setUpdatingPassword(false);
     }
@@ -252,7 +282,7 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
             <div className="w-32 h-32 rounded-full border-4 border-surface-container-lowest shadow-sm bg-surface-variant overflow-hidden flex items-center justify-center">
               {profile?.avatar_url
                 ? <img alt="Foto de Perfil" className="w-full h-full object-cover" src={profile.avatar_url} />
-                : <span className="text-display-sm font-bold text-on-surface-variant">{getInitials(profile?.full_name)}</span>
+                : <span className="text-display-sm font-bold text-on-surface-variant">{getInitials(profile?.full_name ?? "")}</span>
               }
             </div>
             <label className="absolute bottom-0 right-0 p-2 bg-primary text-on-primary rounded-full cursor-pointer shadow-lg hover:bg-primary-container transition-colors">
@@ -262,7 +292,7 @@ export function ProfileSettings({ extraCuentaContent }: ProfileSettingsProps) {
           </div>
           <h2 className="text-headline-md font-bold text-on-surface relative z-10">{profile?.full_name}</h2>
           <p className="text-body-md font-medium text-on-surface-variant mb-sm relative z-10 capitalize">
-            {profile?.role === "admin" ? "Administrador" : profile?.role === "teacher" ? "Docente" : "Estudiante"}
+            {profile?.role === "admin" ? "Administrador" : profile?.role === "teacher" ? "Docente" : profile?.role === "parent" ? "Padre de Familia" : "Estudiante"}
           </p>
           <div className="flex items-center gap-xs text-primary bg-surface-container-high px-3 py-1 rounded-full relative z-10">
             <Mail size={14} />

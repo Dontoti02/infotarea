@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { 
   School, 
   Bell, 
-  UserCircle,
   Menu,
   Search,
   LogOut,
@@ -16,18 +15,72 @@ import {
   User,
   Loader2,
   Sparkles,
-  ChevronLeft
+  AlertTriangle,
+  ChevronLeft,
+  Camera,
+  Eye,
+  EyeOff,
+  KeyRound,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
+import { studentAlertTitle, type AlertType } from "@/shared/utils/prioritization";
 import { WebPresence } from "@/shared/components/communication/WebPresence";
+import { PROFILE_BUCKET, buildAvatarPath, storagePathFromPublicUrl } from "@/shared/utils/storage";
 
 export interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+}
+
+/** Curso mostrado en el buscador global. */
+interface SearchCourse {
+  id?: string;
+  name: string;
+  section?: string | null;
+}
+
+/** Tarea del buscador global (el curso llega embebido por PostgREST). */
+interface SearchTask {
+  id: string;
+  title: string;
+  due_date?: string | null;
+  courses?: SearchCourse | SearchCourse[] | null;
+}
+
+/** Aviso del buscador global. */
+interface SearchNotice {
+  id: string;
+  title: string;
+  category?: string | null;
+}
+
+/** Elemento de la campanita (avisos, tareas y alertas inteligentes). */
+interface DashboardNotification {
+  id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  date: string;
+  author: string;
+  href: string;
+  unread: boolean;
+}
+
+/**
+ * PostgREST puede embeber una relación como objeto (a-uno) o como lista
+ * (a-muchos) y el tipado del cliente siempre asume lista. Este helper unifica
+ * ambos casos al leer un embed.
+ */
+function firstEmbedded<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
 }
 
 interface DashboardLayoutProps {
@@ -43,6 +96,18 @@ const ROLE_LABELS: Record<string, string> = {
   student: "Estudiante",
   parent: "Padre de Familia",
 };
+
+/** Mensaje de éxito/error dentro del modal «Mi Cuenta». */
+function ModalBanner({ msg }: { msg: { type: "success" | "error"; text: string } | null }) {
+  if (!msg) return null;
+  const ok = msg.type === "success";
+  return (
+    <div className={`p-3 rounded-lg flex items-start gap-2 text-label-sm font-medium ${ok ? "bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0]" : "bg-error-container text-on-error-container border border-error/20"}`}>
+      {ok ? <CheckCircle2 size={16} className="mt-0.5 shrink-0" /> : <AlertCircle size={16} className="mt-0.5 shrink-0" />}
+      <span>{msg.text}</span>
+    </div>
+  );
+}
 
 export function DashboardLayout({ 
   children, 
@@ -68,6 +133,8 @@ export function DashboardLayout({
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebar_collapsed");
       if (saved === "true") {
+        // Lectura intencional del localStorage al montar el layout.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsSidebarCollapsed(true);
       }
     }
@@ -88,18 +155,30 @@ export function DashboardLayout({
   const [userBio, setUserBio] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
+  // «Mi Cuenta»: edición de foto, datos y contraseña
+  const [editName, setEditName] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [modalMsg, setModalMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showModalPwd, setShowModalPwd] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   // Search states
   const [searchTerm, setSearchTerm] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<{
     pages: { label: string; href: string; icon: React.ElementType }[];
-    courses: any[];
-    tasks: any[];
-    notices: any[];
+    courses: SearchCourse[];
+    tasks: SearchTask[];
+    notices: SearchNotice[];
   }>({ pages: [], courses: [], tasks: [], notices: [] });
 
   // Notifications states
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<DashboardNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -124,10 +203,106 @@ export function DashboardLayout({
       setUserEmail(user.email || null);
     }
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const displayName = profileName ?? userName;
   const displayRole = profileRole ?? userRole;
+
+  // ── «Mi Cuenta»: foto, datos y contraseña ────────────────────────────────
+  const MODAL_MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+  const handleModalAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !profileId) return;
+    if (!file.type.startsWith("image/")) {
+      setModalMsg({ type: "error", text: "Selecciona una imagen válida (JPG, PNG, etc.)." });
+      return;
+    }
+    if (file.size > MODAL_MAX_AVATAR_BYTES) {
+      setModalMsg({ type: "error", text: "La imagen no debe superar los 5 MB." });
+      return;
+    }
+    setUploadingAvatar(true);
+    setModalMsg(null);
+    try {
+      const filePath = buildAvatarPath(profileId, file.name);
+      if (!filePath) {
+        setModalMsg({ type: "error", text: "No se pudo preparar la imagen." });
+        return;
+      }
+      const { error: uploadError } = await supabase.storage.from(PROFILE_BUCKET).upload(filePath, file);
+      if (uploadError) {
+        setModalMsg({ type: "error", text: "Error al subir imagen: " + uploadError.message });
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage.from(PROFILE_BUCKET).getPublicUrl(filePath);
+      const previousPath = storagePathFromPublicUrl(avatarUrl, PROFILE_BUCKET);
+      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profileId);
+      if (updateError) {
+        setModalMsg({ type: "error", text: "Error al actualizar foto: " + updateError.message });
+        return;
+      }
+      // Limpieza opcional: borra la foto anterior si vivía en el mismo bucket.
+      if (previousPath) await supabase.storage.from(PROFILE_BUCKET).remove([previousPath]);
+      setAvatarUrl(publicUrl);
+      setModalMsg({ type: "success", text: "Foto de perfil actualizada." });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleModalSaveProfile = async () => {
+    if (!profileId) return;
+    const name = editName.trim();
+    if (name.length < 3) {
+      setModalMsg({ type: "error", text: "El nombre debe tener al menos 3 caracteres." });
+      return;
+    }
+    setSavingProfile(true);
+    setModalMsg(null);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: name, bio: editBio.trim(), updated_at: new Date().toISOString() })
+        .eq("id", profileId);
+      if (error) {
+        setModalMsg({ type: "error", text: "Error al guardar: " + error.message });
+        return;
+      }
+      setProfileName(name);
+      setUserBio(editBio.trim() || null);
+      setModalMsg({ type: "success", text: "Datos actualizados correctamente." });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleModalChangePassword = async () => {
+    setPasswordMsg(null);
+    if (newPassword.length < 6) {
+      setPasswordMsg({ type: "error", text: "La contraseña debe tener al menos 6 caracteres." });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: "error", text: "Las contraseñas no coinciden." });
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        setPasswordMsg({ type: "error", text: "Error al cambiar contraseña: " + error.message });
+        return;
+      }
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMsg({ type: "success", text: "¡Contraseña actualizada! Úsala en tu próximo inicio de sesión." });
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
   // Load notifications (Notices and upcoming Tasks)
   const loadNotifications = async () => {
@@ -149,7 +324,7 @@ export function DashboardLayout({
       }).slice(0, 5);
 
       // 2. Fetch student-specific tasks
-      let tasksData: any[] = [];
+      let tasksData: SearchTask[] = [];
       const currentRole = userRoleKey || (pathname.split("/")[1]) || "student";
       
       if (currentRole === "student") {
@@ -171,6 +346,26 @@ export function DashboardLayout({
         }
       }
 
+      // 3. Fetch the student's own smart alerts (low performance, etc.).
+      type SmartAlertRow = {
+        id: string;
+        alert_type: AlertType;
+        severity: string;
+        title: string;
+        message: string;
+        created_at: string;
+      };
+      let alertsData: SmartAlertRow[] = [];
+      if (currentRole === "student") {
+        const { data } = await supabase
+          .from("smart_alerts")
+          .select("id, alert_type, severity, title, message, created_at")
+          .eq("student_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        alertsData = (data as SmartAlertRow[] | null) ?? [];
+      }
+
       const noticesMapped = activeNotices.map(n => ({
         id: n.id,
         type: "notice",
@@ -178,7 +373,7 @@ export function DashboardLayout({
         description: n.content,
         category: n.category,
         date: n.created_at,
-        author: (Array.isArray(n.profiles) ? n.profiles[0]?.full_name : (n.profiles as any)?.full_name) || "Administración",
+        author: firstEmbedded(n.profiles)?.full_name || "Administración",
         href: `/${currentRole}/avisos`
       }));
 
@@ -186,14 +381,25 @@ export function DashboardLayout({
         id: t.id,
         type: "task",
         title: `Nueva Tarea: ${t.title}`,
-        description: `Asignatura: ${(Array.isArray(t.courses) ? t.courses[0]?.name : (t.courses as any)?.name) || ""}. Vence: ${t.due_date ? new Date(t.due_date).toLocaleDateString() : 'Sin fecha límite'}`,
+        description: `Asignatura: ${(Array.isArray(t.courses) ? t.courses[0]?.name : t.courses?.name) || ""}. Vence: ${t.due_date ? new Date(t.due_date).toLocaleDateString() : 'Sin fecha límite'}`,
         category: "academic",
         date: t.due_date || new Date().toISOString(),
         author: "Docente",
         href: `/student/tareas?task_id=${t.id}`
       }));
 
-      const combined = [...noticesMapped, ...tasksMapped].sort((a, b) => 
+      const alertsMapped = alertsData.map(a => ({
+        id: `alert-${a.id}`,
+        type: "alert",
+        title: studentAlertTitle(a.alert_type, a.title),
+        description: a.message,
+        category: a.severity,
+        date: a.created_at,
+        author: "Componente inteligente",
+        href: "/student/seguimiento"
+      }));
+
+      const combined = [...noticesMapped, ...tasksMapped, ...alertsMapped].sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       );
 
@@ -212,6 +418,8 @@ export function DashboardLayout({
 
   useEffect(() => {
     if (userRoleKey) {
+      // Cargar notificaciones al cambiar de sección/rol es intencional.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadNotifications();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -226,7 +434,7 @@ export function DashboardLayout({
   };
 
   // Click on a notification
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: DashboardNotification) => {
     const readIds = JSON.parse(localStorage.getItem("read_notifications") || "[]");
     if (!readIds.includes(notification.id)) {
       readIds.push(notification.id);
@@ -266,6 +474,8 @@ export function DashboardLayout({
     }));
 
     if (!searchTerm.trim()) {
+      // Limpiar los resultados al abrir/cerrar el buscador es intencional.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults({
         pages: availablePages,
         courses: [],
@@ -286,7 +496,7 @@ export function DashboardLayout({
         );
 
         // Fetch courses matching query
-        let matchedCourses: any[] = [];
+        let matchedCourses: SearchCourse[] = [];
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           if (currentRole === "admin") {
@@ -310,15 +520,16 @@ export function DashboardLayout({
               .select("course_id, courses(id, name, section)")
               .eq("profile_id", user.id);
             
-            const list = memberships
-              ?.map((m: any) => m.courses)
-              .filter((c: any) => c && c.name.toLowerCase().includes(query)) || [];
+            const list: SearchCourse[] = (memberships || []).flatMap(m => {
+              const course = firstEmbedded<SearchCourse>(m.courses);
+              return course && course.name.toLowerCase().includes(query) ? [course] : [];
+            });
             matchedCourses = list.slice(0, 5);
           }
         }
 
         // Fetch tasks matching query
-        let matchedTasks: any[] = [];
+        let matchedTasks: SearchTask[] = [];
         if (user) {
           if (currentRole === "admin") {
             const { data } = await supabase
@@ -389,6 +600,7 @@ export function DashboardLayout({
     }, 300);
 
     return () => clearTimeout(delayDebounce);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, isSearchOpen, userRoleKey, pathname]);
 
   const getInitials = (name: string) => {
@@ -598,9 +810,17 @@ export function DashboardLayout({
                             className={`p-md flex gap-md cursor-pointer hover:bg-surface-container transition-colors text-left ${item.unread ? 'bg-primary/5' : ''}`}
                           >
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                              item.type === 'task' ? 'bg-primary/10 text-primary' : 'bg-amber-100 text-amber-800'
+                              item.type === 'alert'
+                                ? 'bg-error/10 text-error'
+                                : item.type === 'task'
+                                  ? 'bg-primary/10 text-primary'
+                                  : 'bg-amber-100 text-amber-800'
                             }`}>
-                              {item.type === 'task' ? <FileText size={16} /> : <Megaphone size={16} />}
+                              {item.type === 'alert'
+                                ? <AlertTriangle size={16} />
+                                : item.type === 'task'
+                                  ? <FileText size={16} />
+                                  : <Megaphone size={16} />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start mb-0.5">
@@ -686,7 +906,7 @@ export function DashboardLayout({
                     {userBio && (
                       <div className="bg-surface px-sm py-1.5 rounded-lg border border-outline-variant/40">
                         <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">Biografía</p>
-                        <p className="text-label-sm text-on-surface-variant italic line-clamp-2">"{userBio}"</p>
+                        <p className="text-label-sm text-on-surface-variant italic line-clamp-2">&ldquo;{userBio}&rdquo;</p>
                       </div>
                     )}
 
@@ -697,6 +917,12 @@ export function DashboardLayout({
                       <button 
                         onClick={() => {
                           setIsProfileOpen(false);
+                          setEditName(profileName ?? "");
+                          setEditBio(userBio ?? "");
+                          setModalMsg(null);
+                          setNewPassword("");
+                          setConfirmPassword("");
+                          setPasswordMsg(null);
                           setIsProfileModalOpen(true);
                         }}
                         className="w-full flex items-center gap-md text-on-surface-variant hover:bg-surface-container-low px-md py-sm transition-all duration-200 rounded-lg text-left font-bold text-label-md cursor-pointer group"
@@ -815,7 +1041,7 @@ export function DashboardLayout({
                    searchResults.notices.length === 0 ? (
                     <div className="text-center py-10 text-on-surface-variant">
                       <p className="text-body-lg font-bold">No se encontraron resultados</p>
-                      <p className="text-body-md mt-1">Intenta con otra palabra clave como "matemáticas" o "tarea".</p>
+                      <p className="text-body-md mt-1">Intenta con otra palabra clave como &ldquo;matemáticas&rdquo; o &ldquo;tarea&rdquo;.</p>
                     </div>
                   ) : (
                     <div className="space-y-md text-left">
@@ -890,7 +1116,7 @@ export function DashboardLayout({
                               </div>
                               <div>
                                 <span className="text-body-md font-bold text-on-surface block leading-tight">{t.title}</span>
-                                <span className="text-label-sm text-on-surface-variant">Curso: {(Array.isArray(t.courses) ? t.courses[0]?.name : (t.courses as any)?.name) || 'Asignatura'}</span>
+                                <span className="text-label-sm text-on-surface-variant">Curso: {(Array.isArray(t.courses) ? t.courses[0]?.name : t.courses?.name) || 'Asignatura'}</span>
                               </div>
                             </button>
                           ))}
@@ -939,46 +1165,127 @@ export function DashboardLayout({
       {/* Profile Detail Modal */}
       {isProfileModalOpen && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[28rem] relative overflow-hidden">
-            <div className="h-1.5 w-full bg-primary" />
+          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[28rem] relative overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="h-1.5 w-full bg-primary shrink-0" />
             <button 
               onClick={() => setIsProfileModalOpen(false)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant bg-surface-container-lowest/70 backdrop-blur hover:bg-surface-container transition-colors"
             >
               <X size={18} />
             </button>
-            <div className="p-6 text-center space-y-md">
-              <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto border-2 border-primary/20 overflow-hidden shadow-sm">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-headline-md font-black">{getInitials(displayName)}</span>
-                )}
-              </div>
-              <div>
-                <h3 className="text-title-lg font-black text-on-surface leading-tight">{displayName}</h3>
+            <div className="p-6 space-y-md overflow-y-auto">
+              {/* Cabecera: foto editable + identidad */}
+              <div className="text-center">
+                <div className="relative w-20 h-20 mx-auto">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center border-2 border-primary/20 overflow-hidden shadow-sm">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-headline-md font-black">{getInitials(displayName)}</span>
+                    )}
+                  </div>
+                  <label
+                    title="Cambiar foto de perfil"
+                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center cursor-pointer shadow-lg hover:bg-primary-container transition-colors"
+                  >
+                    {uploadingAvatar ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleModalAvatarChange} disabled={uploadingAvatar} />
+                  </label>
+                </div>
+                <h3 className="text-title-lg font-black text-on-surface leading-tight mt-3">{displayName}</h3>
                 <span className="inline-flex px-3 py-1 mt-1 rounded-full text-label-sm font-bold bg-primary-container text-on-primary-container">
                   {displayRole}
                 </span>
               </div>
+
+              {/* Datos personales (editables) */}
               <div className="bg-surface p-md rounded-xl border border-outline-variant/50 space-y-sm text-left">
                 <div className="flex items-center gap-sm text-on-surface-variant">
                   <Mail size={16} className="text-primary shrink-0" />
                   <span className="text-body-md truncate">{userEmail || "Sin correo"}</span>
                 </div>
-                {userBio && (
-                  <div className="pt-2 border-t border-outline-variant/35 text-on-surface-variant">
-                    <p className="text-label-sm font-bold text-primary mb-0.5">Biografía</p>
-                    <p className="text-body-md italic leading-relaxed">"{userBio}"</p>
-                  </div>
-                )}
+                <div>
+                  <label className="block text-label-sm font-bold text-on-surface mb-1" htmlFor="mi-cuenta-nombre">Nombre completo</label>
+                  <input
+                    id="mi-cuenta-nombre"
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-body-md text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-label-sm font-bold text-on-surface mb-1" htmlFor="mi-cuenta-bio">Biografía</label>
+                  <textarea
+                    id="mi-cuenta-bio"
+                    rows={2}
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value)}
+                    placeholder="Escribe algo sobre ti..."
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-body-md text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all resize-none"
+                  />
+                </div>
+                <ModalBanner msg={modalMsg} />
+                <button
+                  onClick={handleModalSaveProfile}
+                  disabled={savingProfile}
+                  className="w-full py-2.5 bg-primary text-on-primary hover:bg-primary-container rounded-full font-bold text-label-md transition-colors disabled:opacity-60 flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  {savingProfile && <Loader2 size={16} className="animate-spin" />}
+                  {savingProfile ? "Guardando..." : "Guardar datos"}
+                </button>
               </div>
-              <button
+
+              {/* Cambiar contraseña */}
+              <div className="bg-surface p-md rounded-xl border border-outline-variant/50 space-y-sm text-left">
+                <div className="flex items-center gap-2 pb-2 border-b border-outline-variant/35">
+                  <KeyRound size={16} className="text-primary shrink-0" />
+                  <span className="text-label-md font-bold text-on-surface">Cambiar contraseña</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showModalPwd ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Nueva contraseña"
+                    autoComplete="new-password"
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 pr-10 py-2 text-body-md text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowModalPwd(!showModalPwd)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-outline-variant hover:text-on-surface transition-colors"
+                    aria-label={showModalPwd ? "Ocultar contraseña" : "Ver contraseña"}
+                  >
+                    {showModalPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <input
+                  type={showModalPwd ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirmar contraseña"
+                  autoComplete="new-password"
+                  className={`w-full bg-surface-container-lowest border rounded-lg px-3 py-2 text-body-md text-on-surface focus:ring-2 focus:ring-primary outline-none transition-all ${confirmPassword && newPassword !== confirmPassword ? "border-error focus:ring-error" : "border-outline-variant"}`}
+                />
+                <ModalBanner msg={passwordMsg} />
+                <button
+                  onClick={handleModalChangePassword}
+                  disabled={savingPassword}
+                  className="w-full py-2.5 bg-primary text-on-primary hover:bg-primary-container rounded-full font-bold text-label-md transition-colors disabled:opacity-60 flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  {savingPassword && <Loader2 size={16} className="animate-spin" />}
+                  {savingPassword ? "Actualizando..." : "Cambiar contraseña"}
+                </button>
+              </div>
+
+              <Link
+                href={`/${userRoleKey || "student"}/configuracion`}
                 onClick={() => setIsProfileModalOpen(false)}
-                className="w-full py-2.5 bg-primary text-on-primary hover:bg-primary-container rounded-full font-bold text-label-md transition-colors"
+                className="block text-center text-label-sm font-bold text-primary hover:text-primary-container transition-colors pb-1"
               >
-                Cerrar
-              </button>
+                Ir a configuración avanzada
+              </Link>
             </div>
           </div>
         </div>,

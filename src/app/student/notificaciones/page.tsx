@@ -7,12 +7,13 @@ import {
   Clock, 
   Megaphone, 
   ClipboardList,
-  AlertCircle,
+  AlertTriangle,
   Loader2,
   RefreshCw
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { studentAlertTitle, type AlertType } from "@/shared/utils/prioritization";
 
 interface Notification {
   id: string;
@@ -47,6 +48,7 @@ function NotificationsContent() {
     setLoading(true);
     try {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
       const [notices, tasks] = await Promise.all([
         supabase
@@ -60,6 +62,26 @@ function NotificationsContent() {
           .order("created_at", { ascending: false })
           .limit(10),
       ]);
+
+      // Avisos del componente inteligente dirigidos a este estudiante
+      // (bajo rendimiento y similares). La política de RLS solo devuelve sus filas.
+      let smartAlerts: Array<{
+        id: string;
+        alert_type: AlertType;
+        severity: string;
+        title: string;
+        message: string;
+        created_at: string;
+      }> = [];
+      if (user) {
+        const { data } = await supabase
+          .from("smart_alerts")
+          .select("id, alert_type, severity, title, message, created_at")
+          .eq("student_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        smartAlerts = data || [];
+      }
 
       const all: Notification[] = [];
 
@@ -88,6 +110,19 @@ function NotificationsContent() {
         });
       });
 
+      smartAlerts.forEach((a) => {
+        const isSevere = a.severity === "critica" || a.severity === "alta";
+        all.push({
+          id: `alert-${a.id}`,
+          title: studentAlertTitle(a.alert_type, a.title),
+          description: a.message,
+          time: getRelativeTime(a.created_at),
+          read: false,
+          icon: <AlertTriangle size={18} />,
+          color: isSevere ? "bg-error-container/20 text-error" : "bg-amber-100 text-amber-800",
+        });
+      });
+
       all.sort((a, b) => {
         const order = ["Ahora", "min", "hora", "día"];
         const aIdx = order.findIndex((o) => a.time.includes(o));
@@ -105,7 +140,7 @@ function NotificationsContent() {
   }, []);
 
   useEffect(() => {
-    loadNotifications();
+    Promise.resolve().then(loadNotifications);
   }, [loadNotifications]);
 
   const markAllAsRead = () => {

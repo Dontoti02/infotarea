@@ -278,6 +278,7 @@ test('la limpieza del panel familiar cancela la consulta sin error de consola ni
     'next/navigation': { useRouter: () => ({ push: value => redirects.push(value) }) },
     'next/link': { default: () => null },
     '@/modules/parent/components/ParentLayout': { ParentLayout: () => null },
+    '@/modules/smart': { ParentSmartAlerts: () => null },
   };
   const originalFetch = globalThis.fetch;
   const originalConsoleError = console.error;

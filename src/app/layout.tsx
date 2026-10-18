@@ -13,7 +13,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Infotarea | Monolito Modular",
+  title: "Infotarea | Sistema Académico",
   description: "Estructura profesional de Next.js + Supabase con arquitectura monolito modular.",
 };
 

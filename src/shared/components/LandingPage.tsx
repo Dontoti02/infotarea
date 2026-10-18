@@ -1,19 +1,38 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BookOpen, ArrowRight, Bell, Calendar, User, ChevronDown, ShieldAlert } from "lucide-react";
+import { BookOpen, ArrowRight, Calendar, User, ChevronDown, ShieldAlert, LogIn } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+
+/** Aviso mostrado en la portada (dato real de Supabase o de ejemplo). */
+interface LandingNotice {
+  id: string | number;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  author: string;
+}
+
+/** Fila cruda de la tabla `notices` con el autor embebido. */
+interface RawNoticeRow {
+  id: string | number;
+  title: string;
+  content: string | null;
+  category: string | null;
+  created_at: string;
+  profiles: { full_name: string | null } | null;
+}
 
 export function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeCategory, setActiveCategory] = useState("todos");
   const [expandedNoticeId, setExpandedNoticeId] = useState<string | number | null>(null);
   
-  const [dynamicNotices, setDynamicNotices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dynamicNotices, setDynamicNotices] = useState<LandingNotice[]>([]);
 
-  const fallbackNotices = [
+  const fallbackNotices: LandingNotice[] = [
     {
       id: "fallback-1",
       title: "Cambio de Aula: Laboratorio Central",
@@ -44,7 +63,7 @@ export function LandingPage() {
 
   const filteredNotices = activeCategory === "todos" 
     ? displayedNotices 
-    : displayedNotices.filter((n: any) => n.category === activeCategory);
+    : displayedNotices.filter((n) => n.category === activeCategory);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,10 +85,10 @@ export function LandingPage() {
           .limit(6);
 
         if (!error && data) {
-          const mapped = data.map((item: any) => ({
+          const mapped: LandingNotice[] = (data as RawNoticeRow[]).map((item) => ({
             id: item.id,
             title: item.title,
-            description: item.content,
+            description: item.content ?? "",
             category: item.category === "urgent" 
               ? "urgente" 
               : item.category === "academic"
@@ -86,8 +105,6 @@ export function LandingPage() {
         }
       } catch (err) {
         console.error("Error fetching notices:", err);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -140,7 +157,7 @@ export function LandingPage() {
         <div className="flex justify-between items-center px-4 md:px-16 py-4 max-w-[1280px] mx-auto">
           {/* Brand */}
           <Link className="flex items-center gap-2 group" href="/">
-            <img src="/assets/logo.png" alt="Logo" className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+            <img src="/assets/logo.png" alt="Logo" className="h-24 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
           </Link>
           {/* Navigation & Actions */}
           <nav className="flex items-center gap-6">
@@ -149,14 +166,12 @@ export function LandingPage() {
               <a className="text-on-surface-variant font-body-md hover:text-primary transition-colors duration-200" href="#avisos">
                 Avisos
               </a>
-              <a className="text-on-surface-variant font-body-md hover:text-primary transition-colors duration-200" href="#">
-                Soporte
-              </a>
             </div>
             {/* Trailing Primary Action */}
-            <a className="hidden md:inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-primary text-primary font-label-md hover:bg-primary/5 transition-colors" href="#">
-              Soporte
-            </a>
+            <Link className="hidden md:inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-primary text-primary font-label-md hover:bg-primary/5 transition-colors" href="/login">
+              <LogIn className="w-4 h-4" />
+              Iniciar Sesión
+            </Link>
           </nav>
         </div>
       </header>
@@ -375,14 +390,13 @@ export function LandingPage() {
       <footer className="w-full mt-auto bg-surface-container-low border-t border-outline-variant">
         <div className="flex flex-col md:flex-row justify-between items-center px-4 md:px-16 py-8 max-w-[1280px] mx-auto gap-4">
           <div className="flex items-center gap-2">
-            <img src="/assets/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
-            <span className="font-headline-lg text-headline-lg-mobile text-primary">InfoTarea</span>
+            <img src="/assets/logo.png" alt="InfoTarea" className="h-20 w-auto object-contain" />
           </div>
           <p className="font-label-md text-label-md text-on-surface-variant text-center md:text-left">
             © 2026 IE Teniente Miguel Cortés del Castillo. Todos los derechos reservados.
           </p>
           <nav className="flex gap-6">
-            <a className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors opacity-100 hover:opacity-80" href="#">Soporte</a>
+            <Link className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors opacity-100 hover:opacity-80" href="/login">Iniciar Sesión</Link>
             <a className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors opacity-100 hover:opacity-80" href="#">Políticas de Privacidad</a>
             <a className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors opacity-100 hover:opacity-80" href="#">Términos de Servicio</a>
           </nav>
